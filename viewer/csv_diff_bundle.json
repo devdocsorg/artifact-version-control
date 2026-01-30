@@ -1,0 +1,100 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "branch_name": "add-q4-data",
+    "artifact_type": "csv-data",
+    "created_at": "2026-01-30T20:59:51.651835+00:00",
+    "pr_description": "Added Q4 2025 data (4 new rows), corrected Q1 North Widget A revenue (125K\u2192127.5K), added Margin column",
+    "status": "active"
+  },
+  "summary": {
+    "files": [
+      {
+        "path": "sales_after.csv",
+        "status": "modified",
+        "description": "+4 rows / -0 rows / ~1 modified"
+      }
+    ],
+    "stats": {
+      "files_changed": 1,
+      "files_added": 0,
+      "files_removed": 0,
+      "total_additions": 4,
+      "total_removals": 0
+    }
+  },
+  "changes": [
+    {
+      "id": "col-chg",
+      "type": "modified",
+      "file": "sales_after.csv",
+      "location": "Columns",
+      "description": "Column changes: Added: Margin",
+      "before": {
+        "type": "text",
+        "content": "Columns: Quarter, Region, Product, Revenue, Units, Cost"
+      },
+      "after": {
+        "type": "text",
+        "content": "Columns: Quarter, Region, Product, Revenue, Units, Cost, Margin"
+      }
+    },
+    {
+      "id": "unch",
+      "type": "unchanged",
+      "file": "sales_after.csv",
+      "description": "11 rows unchanged",
+      "collapsed": true,
+      "content": {
+        "type": "text",
+        "content": "11 rows unchanged"
+      }
+    },
+    {
+      "id": "mod-rows",
+      "type": "modified",
+      "file": "sales_after.csv",
+      "location": "1 rows",
+      "description": "1 rows modified (yellow = changed cells)",
+      "before": {
+        "type": "html",
+        "content": "<table style=\"width:100%;border-collapse:collapse;font-size:13px;font-family:monospace\">\n<tr><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Quarter</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Region</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Product</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Revenue</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Units</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Cost</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Margin</th></tr>\n<tr style=\"\"><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;\">Q1 2025</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;\">North</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;\">Widget A</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(210,153,34,.2);\">125000</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(210,153,34,.2);\">500</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(210,153,34,.2);\">75000</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;\"></td></tr>\n</table>",
+        "label": "BEFORE"
+      },
+      "after": {
+        "type": "html",
+        "content": "<table style=\"width:100%;border-collapse:collapse;font-size:13px;font-family:monospace\">\n<tr><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Quarter</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Region</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Product</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Revenue</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Units</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Cost</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Margin</th></tr>\n<tr style=\"\"><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;\">Q1 2025</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;\">North</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;\">Widget A</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(210,153,34,.2);\">127500</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(210,153,34,.2);\">510</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(210,153,34,.2);\">76500</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;\">40%</td></tr>\n</table>",
+        "label": "AFTER"
+      }
+    },
+    {
+      "id": "mod-0",
+      "type": "modified",
+      "file": "sales_after.csv",
+      "location": "Row [Q1 2025, North, Widget A]",
+      "description": "Cost: '75000'\u2192'76500'; Revenue: '125000'\u2192'127500'; Units: '500'\u2192'510'",
+      "collapsed": true,
+      "before": {
+        "type": "text",
+        "content": "{\n  \"Quarter\": \"Q1 2025\",\n  \"Region\": \"North\",\n  \"Product\": \"Widget A\",\n  \"Revenue\": \"125000\",\n  \"Units\": \"500\",\n  \"Cost\": \"75000\"\n}"
+      },
+      "after": {
+        "type": "text",
+        "content": "{\n  \"Quarter\": \"Q1 2025\",\n  \"Region\": \"North\",\n  \"Product\": \"Widget A\",\n  \"Revenue\": \"127500\",\n  \"Units\": \"510\",\n  \"Cost\": \"76500\",\n  \"Margin\": \"40%\"\n}"
+      }
+    },
+    {
+      "id": "add-rows",
+      "type": "added",
+      "file": "sales_after.csv",
+      "location": "4 rows",
+      "description": "Added 4 new rows",
+      "content": {
+        "type": "html",
+        "content": "<table style=\"width:100%;border-collapse:collapse;font-size:13px;font-family:monospace\">\n<tr><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Quarter</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Region</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Product</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Revenue</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Units</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Cost</th><th style=\"padding:4px 8px;border:1px solid #30363d;background:#161b22;text-align:left;color:#e6edf3\">Margin</th></tr>\n<tr style=\"background:rgba(63,185,80,.15);\"><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">Q4 2025</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">North</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">Widget A</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">155000</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">620</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">93000</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">40%</td></tr>\n<tr style=\"background:rgba(63,185,80,.15);\"><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">Q4 2025</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">North</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">Widget B</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">102000</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">340</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">61200</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">40%</td></tr>\n<tr style=\"background:rgba(63,185,80,.15);\"><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">Q4 2025</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">South</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">Widget A</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">118000</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">460</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">70800</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">40%</td></tr>\n<tr style=\"background:rgba(63,185,80,.15);\"><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">Q4 2025</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">South</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">Widget B</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">76000</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">252</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">45600</td><td style=\"padding:4px 8px;border:1px solid #30363d;color:#e6edf3;background:rgba(63,185,80,.15);\">40%</td></tr>\n</table>",
+        "label": "4 NEW ROWS"
+      }
+    }
+  ],
+  "comments": []
+}
