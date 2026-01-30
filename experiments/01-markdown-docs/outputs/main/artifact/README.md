@@ -12,6 +12,7 @@ Welcome to the Acme API. This documentation covers everything you need to integr
 
 - [Authentication](authentication.md) — API keys, OAuth, and token management
 - [Endpoints](endpoints.md) — Full API reference
+- [Pagination](pagination.md) — Guide to paginating list endpoints
 - [Error Codes](errors.md) — Error responses and troubleshooting
 - [Changelog](changelog.md) — Version history and breaking changes
 

@@ -2,6 +2,8 @@
 
 All endpoints use the base URL `https://api.acme.com/v2`.
 
+> **Note:** All list endpoints support pagination. See the [Pagination Guide](pagination.md) for details.
+
 ## Users
 
 ### List Users
@@ -38,7 +40,12 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
       "role": "admin"
     }
   ],
-  "total": 42
+  "meta": {
+    "total": 42,
+    "limit": 10,
+    "offset": 0,
+    "has_more": true
+  }
 }
 ```
 
@@ -111,7 +118,12 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
       "created_at": "2025-01-15T10:00:00Z"
     }
   ],
-  "total": 5
+  "meta": {
+    "total": 5,
+    "limit": 20,
+    "offset": 0,
+    "has_more": false
+  }
 }
 ```
 
