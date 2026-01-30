@@ -1,0 +1,12 @@
+[ADDED: New file]
+Additions:
+- Complete new test file for the formatters module
+- 7 test cases across 4 test classes:
+  - TestFormatJson: basic JSON output, pretty-print
+  - TestFormatJsonl: basic JSONL output
+  - TestFormatYaml: basic YAML, readability check, type preservation
+  - TestFormatInvalid: unknown format error handling
+Reason: The formatters module previously had no dedicated tests. Adding YAML support 
+was the catalyst to create comprehensive formatter tests.
+---
+(See full file: tests/test_formatters.py — 65 lines)

@@ -1,0 +1,16 @@
+[UNCHANGED: Lines 1-10]
+
+[MODIFIED: Line 11]
+Changes:
+- Added pyyaml>=6.0 as a required dependency
+Reason: PyYAML needed for YAML output format
+---
+BEFORE:
+    install_requires=[],
+---
+AFTER:
+    install_requires=[
+        "pyyaml>=6.0",
+    ],
+
+[UNCHANGED: Lines 12-20]

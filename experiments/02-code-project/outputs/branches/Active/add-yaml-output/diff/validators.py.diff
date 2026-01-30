@@ -1,0 +1,14 @@
+[UNCHANGED: Lines 1-6]
+
+[MODIFIED: Line 7]
+Changes:
+- Added "yaml" to supported formats list
+Reason: Register yaml as a valid output format
+---
+BEFORE:
+SUPPORTED_FORMATS = ["json", "jsonl"]
+---
+AFTER:
+SUPPORTED_FORMATS = ["json", "jsonl", "yaml"]
+
+[UNCHANGED: Lines 8-45]

@@ -1,0 +1,20 @@
+[UNCHANGED: Lines 1-21]
+
+[ADDED: Lines 22-24 (inserted after "csvjson data.csv --format jsonl")]
+Additions:
+- YAML usage example
+Reason: Document new format option
+---
+# YAML format
+csvjson data.csv --format yaml
+
+[UNCHANGED: Lines 25-35]
+
+[ADDED: Line 39 (inserted after jsonl table row)]
+Additions:
+- YAML row in formats table
+Reason: Document new format in reference table
+---
+| `yaml`  | YAML format (requires PyYAML) |
+
+[UNCHANGED: Lines 40-end]

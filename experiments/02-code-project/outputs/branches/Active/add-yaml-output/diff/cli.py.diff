@@ -1,0 +1,24 @@
+[UNCHANGED: Lines 1-24]
+
+[MODIFIED: Lines 25-29]
+Changes:
+- Added "yaml" to --format choices and help text
+Reason: Enable YAML format selection from CLI
+---
+BEFORE:
+    parser.add_argument(
+        "-f", "--format",
+        help="Output format: json (default), jsonl",
+        choices=["json", "jsonl"],
+        default="json",
+    )
+---
+AFTER:
+    parser.add_argument(
+        "-f", "--format",
+        help="Output format: json (default), jsonl, yaml",
+        choices=["json", "jsonl", "yaml"],
+        default="json",
+    )
+
+[UNCHANGED: Lines 30-78]
