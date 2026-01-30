@@ -1,0 +1,63 @@
+[MODIFIED: Entire file rewritten]
+Changes:
+- Replaced full implementation with backward-compatibility re-export shim
+- All original functions are still importable from this module
+Reason: validators.py split into schema_validators.py and type_validators.py;
+this shim preserves backward compatibility so existing imports still work.
+---
+BEFORE:
+"""Input validation for csvjson."""
+
+import os
+from typing import List
+
+
+SUPPORTED_FORMATS = ["json", "jsonl", "yaml"]
+
+
+def validate_file_path(filepath: str) -> List[str]:
+    """..."""
+    errors = []
+    if not filepath:
+        errors.append("File path cannot be empty")
+        return errors
+    if not os.path.exists(filepath):
+        errors.append(f"File not found: {filepath}")
+        return errors
+    if not os.path.isfile(filepath):
+        errors.append(f"Not a file: {filepath}")
+        return errors
+    if not filepath.lower().endswith(".csv"):
+        errors.append(f"File does not have .csv extension: {filepath}")
+    return errors
+
+
+def validate_output_format(fmt: str) -> List[str]:
+    """..."""
+    errors = []
+    if fmt not in SUPPORTED_FORMATS:
+        errors.append(
+            f"Unsupported format '{fmt}'. Supported: {', '.join(SUPPORTED_FORMATS)}"
+        )
+    return errors
+---
+AFTER:
+"""Input validation for csvjson.
+
+DEPRECATED: This module is a compatibility shim. Import from:
+  - csvjson.schema_validators (validate_file_path, validate_csv_structure)
+  - csvjson.type_validators (validate_output_format, validate_delimiter)
+"""
+
+from csvjson.schema_validators import validate_file_path, validate_csv_structure
+from csvjson.type_validators import validate_output_format, validate_delimiter
+
+SUPPORTED_FORMATS = ["json", "jsonl", "yaml"]
+
+__all__ = [
+    "validate_file_path",
+    "validate_csv_structure",
+    "validate_output_format",
+    "validate_delimiter",
+    "SUPPORTED_FORMATS",
+]

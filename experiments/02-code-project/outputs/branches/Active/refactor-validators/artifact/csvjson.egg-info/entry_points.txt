@@ -1,0 +1,2 @@
+[console_scripts]
+csvjson = csvjson.cli:main

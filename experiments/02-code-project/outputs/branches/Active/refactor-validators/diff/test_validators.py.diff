@@ -1,0 +1,13 @@
+[MODIFIED: Entire file rewritten]
+Changes:
+- Replaced direct tests with backward compatibility verification tests
+- Now tests that the validators.py shim correctly re-exports all functions
+Reason: The real tests live in test_schema_validators.py and test_type_validators.py now.
+This file verifies the shim still works.
+---
+BEFORE:
+- TestValidateFilePath: 5 tests (direct function tests)
+- TestValidateOutputFormat: 3 tests + 1 yaml test (direct function tests)
+---
+AFTER:
+- TestBackwardCompatibility: 5 tests (import verification only)

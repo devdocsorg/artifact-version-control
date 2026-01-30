@@ -1,0 +1,123 @@
+diff -ru --ex Forked_From/artifact/README.md artifact/README.md
+--- Forked_From/artifact/README.md	2026-01-30 15:43:52
++++ artifact/README.md	2026-01-30 15:43:52
+@@ -20,6 +20,9 @@
+ # JSON Lines format
+ csvjson data.csv --format jsonl
+ 
++# YAML format
++csvjson data.csv --format yaml
++
+ # Custom delimiter
+ csvjson data.csv --delimiter ";"
+ 
+@@ -33,6 +36,7 @@
+ |--------|-------------|
+ | `json`  | Standard JSON array (default) |
+ | `jsonl` | JSON Lines — one JSON object per line |
++| `yaml`  | YAML format (requires PyYAML) |
+ 
+ ## Features
+ 
+diff -ru --ex Forked_From/artifact/csvjson/cli.py artifact/csvjson/cli.py
+--- Forked_From/artifact/csvjson/cli.py	2026-01-30 15:43:52
++++ artifact/csvjson/cli.py	2026-01-30 15:43:52
+@@ -25,8 +25,8 @@
+     )
+     parser.add_argument(
+         "-f", "--format",
+-        help="Output format: json (default), jsonl",
+-        choices=["json", "jsonl"],
++        help="Output format: json (default), jsonl, yaml",
++        choices=["json", "jsonl", "yaml"],
+         default="json",
+     )
+     parser.add_argument(
+diff -ru --ex Forked_From/artifact/csvjson/formatters.py artifact/csvjson/formatters.py
+--- Forked_From/artifact/csvjson/formatters.py	2026-01-30 15:43:52
++++ artifact/csvjson/formatters.py	2026-01-30 15:43:52
+@@ -3,7 +3,13 @@
+ import json
+ from typing import List, Dict, Any
+ 
++try:
++    import yaml
++    HAS_YAML = True
++except ImportError:
++    HAS_YAML = False
+ 
++
+ def format_output(
+     records: List[Dict[str, Any]],
+     fmt: str = "json",
+@@ -14,7 +20,7 @@
+ 
+     Args:
+         records: List of record dictionaries.
+-        fmt: Output format ('json' or 'jsonl').
++        fmt: Output format ('json', 'jsonl', or 'yaml').
+         pretty: Pretty-print JSON (only applies to 'json' format).
+ 
+     Returns:
+@@ -24,6 +30,8 @@
+         return _format_json(records, pretty=pretty)
+     elif fmt == "jsonl":
+         return _format_jsonl(records)
++    elif fmt == "yaml":
++        return _format_yaml(records)
+     else:
+         raise ValueError(f"Unknown format: {fmt}")
+ 
+@@ -41,3 +49,12 @@
+     for record in records:
+         lines.append(json.dumps(record, ensure_ascii=False))
+     return "\n".join(lines)
++
++
++def _format_yaml(records: List[Dict[str, Any]]) -> str:
++    """Format as YAML."""
++    if not HAS_YAML:
++        raise ImportError(
++            "PyYAML is required for YAML output. Install with: pip install pyyaml"
++        )
++    return yaml.dump(records, default_flow_style=False, allow_unicode=True)
+diff -ru --ex Forked_From/artifact/csvjson/validators.py artifact/csvjson/validators.py
+--- Forked_From/artifact/csvjson/validators.py	2026-01-30 15:43:52
++++ artifact/csvjson/validators.py	2026-01-30 15:43:52
+@@ -4,7 +4,7 @@
+ from typing import List
+ 
+ 
+-SUPPORTED_FORMATS = ["json", "jsonl"]
++SUPPORTED_FORMATS = ["json", "jsonl", "yaml"]
+ 
+ 
+ def validate_file_path(filepath: str) -> List[str]:
+diff -ru --ex Forked_From/artifact/setup.py artifact/setup.py
+--- Forked_From/artifact/setup.py	2026-01-30 15:43:52
++++ artifact/setup.py	2026-01-30 15:43:52
+@@ -8,7 +8,9 @@
+     description="A CLI tool to convert CSV files to JSON",
+     packages=find_packages(),
+     python_requires=">=3.8",
+-    install_requires=[],
++    install_requires=[
++        "pyyaml>=6.0",
++    ],
+     extras_require={
+         "dev": ["pytest>=7.0"],
+     },
+Only in artifact/tests: test_formatters.py
+diff -ru --ex Forked_From/artifact/tests/test_validators.py artifact/tests/test_validators.py
+--- Forked_From/artifact/tests/test_validators.py	2026-01-30 15:43:52
++++ artifact/tests/test_validators.py	2026-01-30 15:43:52
+@@ -47,6 +47,9 @@
+     def test_valid_jsonl(self):
+         assert validate_output_format("jsonl") == []
+ 
++    def test_valid_yaml(self):
++        assert validate_output_format("yaml") == []
++
+     def test_invalid_format(self):
+         errors = validate_output_format("xml")
+         assert len(errors) == 1
