@@ -7,7 +7,7 @@ from typing import List, Dict, Any
 def convert_csv_to_json(
     filepath: str,
     delimiter: str = ",",
-    encoding: str = "utf-8-sig",
+    encoding: str = "utf-8",
 ) -> List[Dict[str, Any]]:
     """
     Read a CSV file and return a list of dictionaries.
@@ -15,8 +15,7 @@ def convert_csv_to_json(
     Args:
         filepath: Path to the CSV file.
         delimiter: Column delimiter character.
-        encoding: File encoding. Default is 'utf-8-sig' which handles
-                  BOM (byte order mark) transparently.
+        encoding: File encoding.
 
     Returns:
         List of dictionaries, one per row.

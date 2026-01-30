@@ -4,8 +4,7 @@ import argparse
 import sys
 
 from csvjson.converter import convert_csv_to_json
-from csvjson.schema_validators import validate_file_path
-from csvjson.type_validators import validate_output_format
+from csvjson.validators import validate_file_path, validate_output_format
 from csvjson.formatters import format_output
 
 
@@ -26,8 +25,8 @@ def create_parser():
     )
     parser.add_argument(
         "-f", "--format",
-        help="Output format: json (default), jsonl, yaml",
-        choices=["json", "jsonl", "yaml"],
+        help="Output format: json (default), jsonl",
+        choices=["json", "jsonl"],
         default="json",
     )
     parser.add_argument(

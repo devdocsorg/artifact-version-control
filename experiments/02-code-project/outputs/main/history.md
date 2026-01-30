@@ -1,22 +1,11 @@
 # Main History — csvjson
 
-## v1.2.1 — 2025-02-01 (merged from fix-unicode-bug)
-- Fixed BOM handling: encoding default utf-8 → utf-8-sig
-- Added unicode + BOM test cases
-- 43 tests passing
-
-## v1.2.0 — 2025-02-01 (merged from refactor-validators)
-- Split validators.py into schema_validators.py + type_validators.py
-- validators.py kept as backward-compat shim
-- Added validate_csv_structure() and validate_delimiter()
-- 41 tests passing
-
-## v1.1.0 — 2025-01-31 (merged from add-yaml-output)
-- Added YAML output format (--format yaml)
-- Added PyYAML dependency
-- 28 tests passing
-
 ## v1.0.0 — 2025-01-31
-- Initial release: CSV-to-JSON converter
-- Type coercion, argparse CLI, json/jsonl output
-- 20 tests passing
+- Initial release
+- CSV-to-JSON converter with DictReader-based parsing
+- Automatic type coercion (int, float, bool)
+- CLI with argparse: input file, output file, format, delimiter, pretty-print
+- Output formats: json, jsonl
+- Input validation: file existence, extension check, format validation
+- Test suite: 20 tests covering converter and validators
+- All tests passing

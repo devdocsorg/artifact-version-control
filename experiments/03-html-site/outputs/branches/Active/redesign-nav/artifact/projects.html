@@ -11,12 +11,12 @@
   <nav>
     <div class="nav-container">
       <div class="logo">Alex<span>Chen</span></div>
-      <button class="hamburger" aria-label="Toggle menu" aria-expanded="false">
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
+      <button class="hamburger" aria-label="Toggle navigation" aria-expanded="false">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
       </button>
-      <ul class="nav-links">
+      <ul class="nav-menu">
         <li><a href="index.html">Home</a></li>
         <li><a href="about.html">About</a></li>
         <li><a href="projects.html" class="active">Projects</a></li>
@@ -104,13 +104,21 @@
   </footer>
 
   <script>
-    const hamburger = document.querySelector(".hamburger");
-    const navLinks = document.querySelector(".nav-links");
-    hamburger.addEventListener("click", () => {
-      navLinks.classList.toggle("open");
-      hamburger.classList.toggle("active");
-      hamburger.setAttribute("aria-expanded",
-        hamburger.getAttribute("aria-expanded") === "true" ? "false" : "true");
+    const hamburger = document.querySelector('.hamburger');
+    const navMenu = document.querySelector('.nav-menu');
+    
+    hamburger.addEventListener('click', () => {
+      const isOpen = navMenu.classList.toggle('nav-open');
+      hamburger.classList.toggle('is-active');
+      hamburger.setAttribute('aria-expanded', isOpen);
+    });
+
+    document.querySelectorAll('.nav-menu a').forEach(link => {
+      link.addEventListener('click', () => {
+        navMenu.classList.remove('nav-open');
+        hamburger.classList.remove('is-active');
+        hamburger.setAttribute('aria-expanded', 'false');
+      });
     });
   </script>
 

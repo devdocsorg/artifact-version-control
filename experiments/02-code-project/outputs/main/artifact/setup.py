@@ -8,9 +8,7 @@ setup(
     description="A CLI tool to convert CSV files to JSON",
     packages=find_packages(),
     python_requires=">=3.8",
-    install_requires=[
-        "pyyaml>=6.0",
-    ],
+    install_requires=[],
     extras_require={
         "dev": ["pytest>=7.0"],
     },
