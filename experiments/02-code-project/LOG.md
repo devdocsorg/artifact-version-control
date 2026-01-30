@@ -1,6 +1,20 @@
 # Experiment 02 — Code Project LOG
 
-## 2025-01-31 — Session Start
+## 2025-02-01 — Session 2: Rebuild
+
+Previous session had severe git branch-switching issues — commits landed on wrong branches,
+workflow artifacts (diffs, PR.md, history.md) were created then lost. The code and merges 
+happened but metadata is gone. This is itself an important finding:
+
+**META-OBSERVATION: The folder-based workflow creates massive file duplication. When combined 
+with git branch operations, it's extremely fragile. A single wrong `git checkout` can wipe 
+out dozens of files. The prompt's directory structure fights git rather than complementing it.**
+
+Rebuilding experiment cleanly from committed v1.0.0 baseline.
+
+---
+
+## 2025-01-31 — Session Start (original)
 
 ### Setup
 - Read SUB_AGENT_CONTEXT.md, v1-original.md, TASK.md, scoring-rubric.md
