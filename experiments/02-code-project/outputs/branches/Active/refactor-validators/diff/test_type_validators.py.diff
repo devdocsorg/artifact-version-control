@@ -1,0 +1,7 @@
+[ADDED: New file — tests/test_type_validators.py]
+Additions:
+- TestValidateOutputFormat class — 4 tests (migrated from test_validators.py)
+- TestValidateDelimiter class — 6 tests (NEW)
+Reason: Test the new type_validators module directly
+---
+(See full file: tests/test_type_validators.py — 42 lines)

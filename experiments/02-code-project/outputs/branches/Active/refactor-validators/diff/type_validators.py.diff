@@ -1,0 +1,13 @@
+[ADDED: New file — csvjson/type_validators.py]
+Additions:
+- SUPPORTED_FORMATS list — moved from validators.py (unchanged)
+- VALID_DELIMITERS list — NEW constant
+- validate_output_format() — moved from validators.py (logic unchanged)
+- validate_delimiter() — NEW function, validates delimiter character
+Reason: Separation of concerns — type/format validation in one module
+---
+(See full file: csvjson/type_validators.py — 50 lines)
+
+Code movement note: validate_output_format() and SUPPORTED_FORMATS are identical
+to the originals in validators.py. Only validate_delimiter() and VALID_DELIMITERS
+are genuinely new code.
