@@ -42,9 +42,15 @@ At ~4500 words, the v1 prompt takes significant context. Sub-agents spend a lot 
 - Created 5-file API documentation artifact
 - 3 feature branches completed (add-pagination, fix-auth, restructure-docs)
 - All branches generated diffs (both `diff -u` and custom format)
-- Merging worked. Restructure branch tested file deletion + content moves
+- Merging worked. All 3 branches merged successfully.
+  - Branch 1: clean merge
+  - Branch 2: soft conflict (different lines in same file) — resolved via sed
+  - Branch 3: TRUE conflict (restructured file + main had other changes) — manual 3-way merge
 - Test checklist auto-generated sensibly for markdown
-- **Generated DiffBundles and verified in viewer**
+- **Overall score: 3.4/5** — Good for simple changes, breaks on restructuring
+- **Key finding:** `diff -u` fails catastrophically on section reordering (242-line diff for a moved block). The prompt's custom format would be better here IF it supported MOVE semantics.
+- **Key finding:** summary.md is the most valuable artifact the prompt creates — it's the only thing that saved Branch 3's diff from being useless.
+- **Key finding:** Forked_From/ snapshot, despite seeming redundant for text, proved essential for three-way merge conflict resolution in Branch 3.
 
 ### Experiment 02: Code Project 🔄 In Progress
 - Created runnable Python CLI tool (csvjson) with 20+ passing tests
@@ -76,6 +82,9 @@ At ~4500 words, the v1 prompt takes significant context. Sub-agents spend a lot 
 4. **Diff format inconsistency** — prompt describes a custom format but `diff -u` is cleaner for text
 5. **History drift** — commit history in history.md sometimes not updated (AI forgets)
 6. **Two-layer confusion** — git branches + folder branches overlap for text artifacts
+7. **No MOVE semantics in diffs** — Content moving between files (errors.md → endpoints.md) or sections reordering within a file produce misleading diffs. Need `[MOVED_FROM]`/`[MOVED_TO]` markers.
+8. **Manual merge is under-specified** — Prompt detects conflicts well but provides no tools/guidance for actually resolving them. "Flag for manual resolution" is where the hard work starts.
+9. **Folder branching is ironically MORE ROBUST than git branching for AI agents** — Folder state survives regardless of which git branch you're on. Git branching requires maintaining stateful awareness of current branch, which AI agents are bad at across tool calls.
 
 ## What Works Well
 
