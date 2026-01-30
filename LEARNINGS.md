@@ -52,12 +52,24 @@ At ~4500 words, the v1 prompt takes significant context. Sub-agents spend a lot 
 - **Key finding:** summary.md is the most valuable artifact the prompt creates — it's the only thing that saved Branch 3's diff from being useless.
 - **Key finding:** Forked_From/ snapshot, despite seeming redundant for text, proved essential for three-way merge conflict resolution in Branch 3.
 
-### Experiment 02: Code Project 🔄 In Progress
-- Created runnable Python CLI tool (csvjson) with 20+ passing tests
-- Branch 1 (add-yaml-output) merged successfully
-- Branch 2 (refactor-validators) in progress — the "swipe across project" test
-- Test checklist auto-generated with appropriate Python checks
-- `git diff` comparison saved for branch 1
+### Experiment 02: Code Project ✅ Complete
+- Created runnable Python CLI tool (csvjson) — 9 source files, 20 initial tests
+- 3 feature branches completed:
+  - Branch 1: add-yaml-output (feature addition, 7 files, 28 tests)
+  - Branch 2: refactor-validators (file split refactor, 7 files, 41 tests)
+  - Branch 3: fix-unicode-bug (surgical 1-line fix, 2 files, 43 tests)
+- All branches merged. All tests passing.
+- **Overall score: 3.1/5** — Good completeness, terrible friction, mixed git integration
+- **Key finding: Refactoring Map is the killer feature.** summary.md showing code movement
+  (MOVED vs. NEW) provides insight git diff fundamentally cannot. This is the one thing
+  that justifies the workflow for code projects.
+- **Key finding: Folder-based branching is anti-value for code.** Copying 14 files to 
+  Forked_From/ duplicates what `git diff main..branch` gives for free. Creates 76-file 
+  commits. Fragile under git checkout (lost data in session 1).
+- **Key finding: Workflow ceremony must scale with change size.** A 1-line bugfix should
+  not require the same process as a 7-file refactor. Need lightweight mode.
+- **Key finding: PR.md is universally useful.** The only artifact that adds value
+  across all change types — captures intent, decisions, review focus.
 
 ### Experiment 03: HTML Site 🔄 In Progress
 - Created 3-page portfolio site with CSS
@@ -82,6 +94,9 @@ At ~4500 words, the v1 prompt takes significant context. Sub-agents spend a lot 
 4. **Diff format inconsistency** — prompt describes a custom format but `diff -u` is cleaner for text
 5. **History drift** — commit history in history.md sometimes not updated (AI forgets)
 6. **Two-layer confusion** — git branches + folder branches overlap for text artifacts
+7. **Catastrophic overhead for small changes** (exp02) — folder-copy workflow creates 30+ files for a 1-line fix
+8. **Folder branching fragility** (exp02) — Forked_From/ and artifact/ copies are untracked files that `git checkout` can destroy. Session 1 lost all experiment data this way.
+9. **No code movement detection** (exp02) — prompt says "generate diffs programmatically" but has no mechanism for detecting moved code. The Refactoring Map had to be hand-written.
 7. **No MOVE semantics in diffs** — Content moving between files (errors.md → endpoints.md) or sections reordering within a file produce misleading diffs. Need `[MOVED_FROM]`/`[MOVED_TO]` markers.
 8. **Manual merge is under-specified** — Prompt detects conflicts well but provides no tools/guidance for actually resolving them. "Flag for manual resolution" is where the hard work starts.
 9. **Folder branching is ironically MORE ROBUST than git branching for AI agents** — Folder state survives regardless of which git branch you're on. Git branching requires maintaining stateful awareness of current branch, which AI agents are bad at across tool calls.
@@ -94,3 +109,5 @@ At ~4500 words, the v1 prompt takes significant context. Sub-agents spend a lot 
 4. **Test checklist auto-generation** — produces relevant checks per artifact type
 5. **DiffBundle + Viewer** — the universal interface concept works beautifully
 6. **Commentable changes** — per-change inline comments are more useful than whole-file comments
+7. **summary.md for refactors** (exp02) — Refactoring Map showing code movement is the standout value-add for code projects
+8. **Completeness enforcement** (exp02) — the prompt's requirement to account for ALL files (unchanged too) caught gaps that git diff ignores

@@ -276,6 +276,76 @@ footer a {
 }
 
 /* =========================
+   Blog Page
+   ========================= */
+
+.blog-list {
+  max-width: 750px;
+  margin: 0 auto;
+}
+
+.blog-post {
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--color-card-border);
+}
+
+.blog-post:last-child {
+  border-bottom: none;
+}
+
+.blog-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.blog-meta time {
+  color: #888;
+}
+
+.blog-tag {
+  background-color: var(--color-accent);
+  color: #fff;
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.blog-post h3 {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  color: var(--color-heading);
+  margin-bottom: 0.5rem;
+}
+
+.blog-post h3 a {
+  color: var(--color-heading);
+  transition: color 0.2s;
+}
+
+.blog-post h3 a:hover {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.blog-post p {
+  color: #555;
+  margin-bottom: 0.75rem;
+  line-height: 1.7;
+}
+
+.read-more {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* =========================
    Responsive
    ========================= */
 

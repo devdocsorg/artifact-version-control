@@ -16,6 +16,7 @@
         <li><a href="about.html">About</a></li>
         <li><a href="projects.html" class="active">Projects</a></li>
       </ul>
+      <button class="theme-toggle" aria-label="Toggle dark mode">🌙 Dark</button>
     </div>
   </nav>
 
@@ -98,5 +99,13 @@
     <p><a href="mailto:alex@example.com">alex@example.com</a> · <a href="#">GitHub</a> · <a href="#">LinkedIn</a></p>
   </footer>
 
+  <script>
+    const toggle = document.querySelector(".theme-toggle");
+    toggle.addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
+      const isDark = document.body.classList.contains("dark-mode");
+      toggle.textContent = isDark ? "☀️ Light" : "🌙 Dark";
+    });
+  </script>
 </body>
 </html>

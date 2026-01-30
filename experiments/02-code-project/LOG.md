@@ -1,59 +1,56 @@
 # Experiment 02 — Code Project LOG
 
-## 2025-02-01 — Session 2: Rebuild
+## Session 2 (2025-02-01): Rebuild & Complete
 
-Previous session had severe git branch-switching issues — commits landed on wrong branches,
-workflow artifacts (diffs, PR.md, history.md) were created then lost. The code and merges 
-happened but metadata is gone. This is itself an important finding:
+Previous session had git branch-switching issues — commits landed on wrong branches,
+workflow artifacts were lost. This is itself a critical finding:
 
-**META-OBSERVATION: The folder-based workflow creates massive file duplication. When combined 
-with git branch operations, it's extremely fragile. A single wrong `git checkout` can wipe 
-out dozens of files. The prompt's directory structure fights git rather than complementing it.**
+**META-FINDING: The folder-based workflow creates massive file duplication. When combined 
+with git branch operations, it's extremely fragile. A single wrong `git checkout` can 
+wipe out dozens of untracked files. The prompt's directory structure fights git.**
 
-Rebuilding experiment cleanly from committed v1.0.0 baseline.
-
----
-
-## 2025-01-31 — Session Start (original)
-
-### Setup
-- Read SUB_AGENT_CONTEXT.md, v1-original.md, TASK.md, scoring-rubric.md
-- Created git branch: `experiment/02-code-project`
-- Working directory: `experiments/02-code-project/`
-
-### Plan
-1. Create the Python CSV-to-JSON converter project in `outputs/main/artifact/`
-2. Initialize history.md, test_checklist.md
-3. Run 3 feature branches through the Artifact Branch Workflow
-4. Also create real git branches for comparison
-5. Score and report
-
-### Key hypothesis
-Git already handles code diffs extremely well. This workflow should add value primarily through:
-- High-level summary.md (narrative context git lacks)
-- PR.md with human context
-- Test checklist enforcement
-- But folder-based branching will feel redundant
+Rebuilt from committed v1.0.0 baseline. All 3 branches executed cleanly this time.
 
 ---
 
-## Phase 2: Create Artifact — DONE
-- Created csvjson Python project with: cli.py, converter.py, validators.py, formatters.py
-- Created test suite: test_converter.py (12 tests), test_validators.py (8 tests) — 20 total
-- All 20 tests passing
-- Set up virtual env at /tmp/csvjson-venv
-- Created history.md (v1.0.0) and test_checklist.md
-- Initial git commit on experiment/02-code-project branch
+## Phase 2: Artifact Created
+- csvjson Python CLI: cli.py, converter.py, validators.py, formatters.py
+- Tests: 20 passing, virtual env at /tmp/csvjson-venv2
+- history.md and test_checklist.md initialized
 
-### Observation: Test Checklist Generation
-The prompt says to auto-generate a test checklist on first branch. I created one proactively.
-This is already something code projects typically handle via CI/CD — the checklist feels 
-like it duplicates what a CI pipeline + PR template would do. But for an AI agent 
-without CI, it's a useful self-discipline tool.
+## Phase 3: Feature Branches
 
----
+### Branch 1: add-yaml-output ✅
+- Feature addition across 7 files
+- Added YAML formatter, CLI choice, validator entry, dependency, docs, tests
+- Tests: 20 → 28
+- Workflow: summary.md + PR.md added context. Per-file .diff files were more work than value.
+- **Observation:** The [UNCHANGED]/[MODIFIED] format is clunky for code. `diff -u` is better.
 
-## Phase 3: Feature Branches — Starting
+### Branch 2: refactor-validators ✅ ⭐ STAR RESULT
+- Structural refactor: split validators.py into schema_validators.py + type_validators.py
+- Tests: 28 → 41
+- **KEY FINDING:** The Refactoring Map in summary.md is the single most valuable output 
+  of this entire experiment. It shows MOVED vs. NEW code — something git fundamentally 
+  cannot express for file-split operations.
+- Git diff: 166 lines of code appearing/disappearing with no structural context.
+- Prompt diff: Clear map of what moved where, what's unchanged, what's genuinely new.
 
-### Branch 1: add-yaml-output
-Starting now...
+### Branch 3: fix-unicode-bug ✅
+- Surgical 1-line fix (encoding utf-8 → utf-8-sig) + 2 test cases
+- Tests: 41 → 43
+- **KEY FINDING:** The workflow is catastrophically disproportionate for small fixes.
+  Copied 14 files twice to change 3 lines. Git diff: 51 lines, perfectly clear.
+
+## Phase 4: Native Git Diff Comparison
+- Branch 1: 123-line diff (clear, precise, no context on "why")
+- Branch 2: 166-line diff (shows add/delete, CANNOT show code movement)
+- Branch 3: 51-line diff (crystal clear, zero overhead needed)
+- Saved all to samples/ directory
+
+## Phase 5: Scoring Complete → RESULTS.md
+- Overall: 3.1/5
+- Best dimension: Completeness (5.0) — the prompt enforces accounting for all files
+- Worst dimension: Workflow Friction (1.7) — folder-based branching is punishing for code
+
+## Phase 6: Writing LEARNINGS.md and pushing

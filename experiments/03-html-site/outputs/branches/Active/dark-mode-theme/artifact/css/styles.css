@@ -276,6 +276,99 @@ footer a {
 }
 
 /* =========================
+   Dark Mode
+   ========================= */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0d1117;
+    --color-text: #c9d1d9;
+    --color-heading: #f0f6fc;
+    --color-accent: #ff6b81;
+    --color-nav-bg: #161b22;
+    --color-nav-text: #f0f6fc;
+    --color-card-bg: #161b22;
+    --color-card-border: #30363d;
+    --color-footer-bg: #161b22;
+    --color-footer-text: #8b949e;
+  }
+
+  .hero {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #1a2332 100%);
+  }
+
+  .card-image {
+    background-color: #21262d;
+    color: #484f58;
+  }
+
+  .about-photo {
+    background-color: #21262d;
+    color: #484f58;
+  }
+
+  .skills-list li {
+    background-color: var(--color-card-bg);
+    border-color: var(--color-card-border);
+    color: var(--color-text);
+  }
+}
+
+/* Manual dark mode toggle class (mirrors the media query) */
+body.dark-mode {
+  --color-bg: #0d1117;
+  --color-text: #c9d1d9;
+  --color-heading: #f0f6fc;
+  --color-accent: #ff6b81;
+  --color-nav-bg: #161b22;
+  --color-nav-text: #f0f6fc;
+  --color-card-bg: #161b22;
+  --color-card-border: #30363d;
+  --color-footer-bg: #161b22;
+  --color-footer-text: #8b949e;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+body.dark-mode .hero {
+  background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #1a2332 100%);
+}
+
+body.dark-mode .card-image {
+  background-color: #21262d;
+  color: #484f58;
+}
+
+body.dark-mode .about-photo {
+  background-color: #21262d;
+  color: #484f58;
+}
+
+body.dark-mode .skills-list li {
+  background-color: var(--color-card-bg);
+  border-color: var(--color-card-border);
+  color: var(--color-text);
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.3);
+  color: var(--color-nav-text);
+  cursor: pointer;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  margin-left: 1.5rem;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.theme-toggle:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* =========================
    Responsive
    ========================= */
 
