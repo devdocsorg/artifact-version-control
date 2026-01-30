@@ -1,0 +1,385 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "branch_name": "restructure-docs",
+    "artifact_type": "markdown",
+    "created_at": "2026-01-30T20:53:36.283468+00:00",
+    "pr_description": "Restructure API docs: reorder endpoints, move error codes inline into endpoints.md, remove standalone errors.md, update README links",
+    "status": "active"
+  },
+  "summary": {
+    "files": [
+      {
+        "path": "README.md",
+        "status": "modified",
+        "description": "+1/-3"
+      },
+      {
+        "path": "authentication.md",
+        "status": "unchanged"
+      },
+      {
+        "path": "changelog.md",
+        "status": "unchanged"
+      },
+      {
+        "path": "endpoints.md",
+        "status": "modified",
+        "description": "+109/-58"
+      },
+      {
+        "path": "errors.md",
+        "status": "removed",
+        "description": "Deleted (60 lines)"
+      }
+    ],
+    "stats": {
+      "files_changed": 2,
+      "files_added": 0,
+      "files_removed": 1,
+      "total_additions": 110,
+      "total_removals": 121
+    }
+  },
+  "changes": [
+    {
+      "id": "README.md-1",
+      "type": "unchanged",
+      "file": "README.md",
+      "location": "Lines 1-8",
+      "description": "8 unchanged lines",
+      "content": {
+        "type": "code",
+        "content": "# Acme API Documentation\n\nWelcome to the Acme API. This documentation covers everything you need to integrate with our platform.\n... (2 more) ...\n\n1. [Get your API key](authentication.md)\n2. [Make your first request](endpoints.md)",
+        "language": "markdown"
+      },
+      "collapsed": true
+    },
+    {
+      "id": "README.md-2",
+      "type": "removed",
+      "file": "README.md",
+      "location": "Lines 9-9",
+      "description": "Removed 1 lines",
+      "removed_content": {
+        "type": "code",
+        "content": "3. [Handle errors gracefully](errors.md)",
+        "language": "markdown"
+      }
+    },
+    {
+      "id": "README.md-3",
+      "type": "unchanged",
+      "file": "README.md",
+      "location": "Lines 10-13",
+      "description": "4 unchanged lines",
+      "content": {
+        "type": "code",
+        "content": "\n## Table of Contents\n\n- [Authentication](authentication.md) \u2014 API keys, OAuth, and token management",
+        "language": "markdown"
+      },
+      "collapsed": true
+    },
+    {
+      "id": "README.md-4",
+      "type": "modified",
+      "file": "README.md",
+      "location": "Lines 14-15 \u2192 13-13",
+      "description": "Modified 2 \u2192 1 lines",
+      "before": {
+        "type": "code",
+        "content": "- [Endpoints](endpoints.md) \u2014 Full API reference\n- [Error Codes](errors.md) \u2014 Error responses and troubleshooting",
+        "language": "markdown",
+        "label": "Before (lines 14-15)"
+      },
+      "after": {
+        "type": "code",
+        "content": "- [Endpoints](endpoints.md) \u2014 Full API reference with inline error codes",
+        "language": "markdown",
+        "label": "After (lines 13-13)"
+      }
+    },
+    {
+      "id": "README.md-5",
+      "type": "unchanged",
+      "file": "README.md",
+      "location": "Lines 16-30",
+      "description": "15 unchanged lines",
+      "content": {
+        "type": "code",
+        "content": "- [Changelog](changelog.md) \u2014 Version history and breaking changes\n\n## Base URL\n... (9 more) ...\n## Support\n\nContact us at api-support@acme.com or visit our [developer forum](https://forum.acme.com).",
+        "language": "markdown"
+      },
+      "collapsed": true
+    },
+    {
+      "id": "file-authentication.md-unch",
+      "type": "unchanged",
+      "file": "authentication.md",
+      "description": "Unchanged (77 lines)",
+      "collapsed": true,
+      "content": {
+        "type": "text",
+        "content": "(77 lines, no changes)"
+      }
+    },
+    {
+      "id": "file-changelog.md-unch",
+      "type": "unchanged",
+      "file": "changelog.md",
+      "description": "Unchanged (27 lines)",
+      "collapsed": true,
+      "content": {
+        "type": "text",
+        "content": "(27 lines, no changes)"
+      }
+    },
+    {
+      "id": "endpoints.md-1",
+      "type": "unchanged",
+      "file": "endpoints.md",
+      "location": "Lines 1-3",
+      "description": "3 unchanged lines",
+      "content": {
+        "type": "code",
+        "content": "# API Endpoints\n\nAll endpoints use the base URL `https://api.acme.com/v2`.",
+        "language": "markdown"
+      },
+      "collapsed": false
+    },
+    {
+      "id": "endpoints.md-2",
+      "type": "added",
+      "file": "endpoints.md",
+      "location": "After line 3",
+      "description": "Added 84 lines",
+      "content": {
+        "type": "code",
+        "content": "\n## Projects\n\n### List Projects\n\n```\nGET /projects\n```\n\nReturns all projects accessible to the authenticated user.\n\n**Parameters:**\n\n| Parameter | Type | Required | Description |\n|-----------|------|----------|-------------|\n| `status` | string | No | Filter by status: `active`, `archived` |\n| `limit` | integer | No | Max results (default: 20) |\n\n**Example:**\n\n```bash\ncurl -H \"Authorization: Bearer YOUR_API_KEY\" \\\n  \"https://api.acme.com/v2/projects?status=active\"\n```\n\n**Response:**\n\n```json\n{\n  \"data\": [\n    {\n      \"id\": \"proj_456\",\n      \"name\": \"Website Redesign\",\n      \"status\": \"active\",\n      \"created_at\": \"2025-01-15T10:00:00Z\"\n    }\n  ],\n  \"total\": 5\n}\n```\n\n**Errors:**\n\n| Status | Code | Description |\n|--------|------|-------------|\n| 400 | `invalid_field` | Invalid `status` value. Must be `active` or `archived` |\n| 401 | `missing_auth` | No authorization header provided |\n\n### Create Project\n\n```\nPOST /projects\n```\n\n**Body:**\n\n```json\n{\n  \"name\": \"New Project\",\n  \"description\": \"Project description\"\n}\n```\n\n**Errors:**\n\n| Status | Code | Description |\n|--------|------|-------------|\n| 400 | `missing_field` | `name` is required |\n| 403 | `role_required` | Only admins can create projects |\n\n### Delete Project\n\n```\nDELETE /projects/:id\n```\n\nPermanently deletes a project and all associated data. This action cannot be undone.\n\n**Errors:**\n\n| Status | Code | Description |\n|--------|------|-------------|\n| 404 | `not_found` | Project does not exist |\n| 403 | `role_required` | Only admins can delete projects |",
+        "language": "markdown"
+      }
+    },
+    {
+      "id": "endpoints.md-3",
+      "type": "unchanged",
+      "file": "endpoints.md",
+      "location": "Lines 4-44",
+      "description": "41 unchanged lines",
+      "content": {
+        "type": "code",
+        "content": "\n## Users\n\n... (35 more) ...\n}\n```\n",
+        "language": "markdown"
+      },
+      "collapsed": true
+    },
+    {
+      "id": "endpoints.md-4",
+      "type": "added",
+      "file": "endpoints.md",
+      "location": "After line 44",
+      "description": "Added 7 lines",
+      "content": {
+        "type": "code",
+        "content": "**Errors:**\n\n| Status | Code | Description |\n|--------|------|-------------|\n| 401 | `missing_auth` | No authorization header provided |\n| 401 | `invalid_token` | Token is invalid or expired |\n",
+        "language": "markdown"
+      }
+    },
+    {
+      "id": "endpoints.md-5",
+      "type": "unchanged",
+      "file": "endpoints.md",
+      "location": "Lines 45-58",
+      "description": "14 unchanged lines",
+      "content": {
+        "type": "code",
+        "content": "### Get User\n\n```\n... (8 more) ...\ncurl -H \"Authorization: Bearer YOUR_API_KEY\" \\\n  \"https://api.acme.com/v2/users/usr_123\"\n```",
+        "language": "markdown"
+      },
+      "collapsed": true
+    },
+    {
+      "id": "endpoints.md-6",
+      "type": "added",
+      "file": "endpoints.md",
+      "location": "After line 58",
+      "description": "Added 6 lines",
+      "content": {
+        "type": "code",
+        "content": "\n**Errors:**\n\n| Status | Code | Description |\n|--------|------|-------------|\n| 404 | `not_found` | User does not exist |",
+        "language": "markdown"
+      }
+    },
+    {
+      "id": "endpoints.md-7",
+      "type": "unchanged",
+      "file": "endpoints.md",
+      "location": "Lines 59-77",
+      "description": "19 unchanged lines",
+      "content": {
+        "type": "code",
+        "content": "\n### Create User\n\n... (13 more) ...\n}\n```\n",
+        "language": "markdown"
+      },
+      "collapsed": true
+    },
+    {
+      "id": "endpoints.md-8",
+      "type": "modified",
+      "file": "endpoints.md",
+      "location": "Lines 78-78 \u2192 175-175",
+      "description": "Modified 1 \u2192 1 lines",
+      "before": {
+        "type": "code",
+        "content": "## Projects",
+        "language": "markdown",
+        "label": "Before (lines 78-78)"
+      },
+      "after": {
+        "type": "code",
+        "content": "**Errors:**",
+        "language": "markdown",
+        "label": "After (lines 175-175)"
+      }
+    },
+    {
+      "id": "endpoints.md-9",
+      "type": "unchanged",
+      "file": "endpoints.md",
+      "location": "Lines 79-79",
+      "description": "1 unchanged lines",
+      "content": {
+        "type": "code",
+        "content": "",
+        "language": "markdown"
+      },
+      "collapsed": false
+    },
+    {
+      "id": "endpoints.md-10",
+      "type": "modified",
+      "file": "endpoints.md",
+      "location": "Lines 80-80 \u2192 177-181",
+      "description": "Modified 1 \u2192 5 lines",
+      "before": {
+        "type": "code",
+        "content": "### List Projects",
+        "language": "markdown",
+        "label": "Before (lines 80-80)"
+      },
+      "after": {
+        "type": "code",
+        "content": "| Status | Code | Description |\n|--------|------|-------------|\n| 400 | `missing_field` | `name` and `email` are required |\n| 400 | `invalid_field` | `role` must be `admin`, `member`, or `viewer` |\n| 409 | `duplicate` | A user with this email already exists |",
+        "language": "markdown",
+        "label": "After (lines 177-181)"
+      }
+    },
+    {
+      "id": "endpoints.md-11",
+      "type": "unchanged",
+      "file": "endpoints.md",
+      "location": "Lines 81-81",
+      "description": "1 unchanged lines",
+      "content": {
+        "type": "code",
+        "content": "",
+        "language": "markdown"
+      },
+      "collapsed": false
+    },
+    {
+      "id": "endpoints.md-12",
+      "type": "modified",
+      "file": "endpoints.md",
+      "location": "Lines 82-84 \u2192 183-183",
+      "description": "Modified 3 \u2192 1 lines",
+      "before": {
+        "type": "code",
+        "content": "```\nGET /projects\n```",
+        "language": "markdown",
+        "label": "Before (lines 82-84)"
+      },
+      "after": {
+        "type": "code",
+        "content": "## Common Errors",
+        "language": "markdown",
+        "label": "After (lines 183-183)"
+      }
+    },
+    {
+      "id": "endpoints.md-13",
+      "type": "unchanged",
+      "file": "endpoints.md",
+      "location": "Lines 85-85",
+      "description": "1 unchanged lines",
+      "content": {
+        "type": "code",
+        "content": "",
+        "language": "markdown"
+      },
+      "collapsed": false
+    },
+    {
+      "id": "endpoints.md-14",
+      "type": "modified",
+      "file": "endpoints.md",
+      "location": "Lines 86-86 \u2192 185-185",
+      "description": "Modified 1 \u2192 1 lines",
+      "before": {
+        "type": "code",
+        "content": "Returns all projects accessible to the authenticated user.",
+        "language": "markdown",
+        "label": "Before (lines 86-86)"
+      },
+      "after": {
+        "type": "code",
+        "content": "All endpoints may return these errors:",
+        "language": "markdown",
+        "label": "After (lines 185-185)"
+      }
+    },
+    {
+      "id": "endpoints.md-15",
+      "type": "unchanged",
+      "file": "endpoints.md",
+      "location": "Lines 87-87",
+      "description": "1 unchanged lines",
+      "content": {
+        "type": "code",
+        "content": "",
+        "language": "markdown"
+      },
+      "collapsed": false
+    },
+    {
+      "id": "endpoints.md-16",
+      "type": "modified",
+      "file": "endpoints.md",
+      "location": "Lines 88-139 \u2192 187-190",
+      "description": "Modified 52 \u2192 4 lines",
+      "before": {
+        "type": "code",
+        "content": "**Parameters:**\n\n| Parameter | Type | Required | Description |\n|-----------|------|----------|-------------|\n| `status` | string | No | Filter by status: `active`, `archived` |\n| `limit` | integer | No | Max results (default: 20) |\n\n**Example:**\n\n```bash\ncurl -H \"Authorization: Bearer YOUR_API_KEY\" \\\n  \"https://api.acme.com/v2/projects?status=active\"\n```\n\n**Response:**\n\n```json\n{\n  \"data\": [\n    {\n      \"id\": \"proj_456\",\n      \"name\": \"Website Redesign\",\n      \"status\": \"active\",\n      \"created_at\": \"2025-01-15T10:00:00Z\"\n    }\n  ],\n  \"total\": 5\n}\n```\n\n### Create Project\n\n```\nPOST /projects\n```\n\n**Body:**\n\n```json\n{\n  \"name\": \"New Project\",\n  \"description\": \"Project description\"\n}\n```\n\n### Delete Project\n\n```\nDELETE /projects/:id\n```\n\nPermanently deletes a project and all associated data. This action cannot be undone.",
+        "language": "markdown",
+        "label": "Before (lines 88-139)"
+      },
+      "after": {
+        "type": "code",
+        "content": "| Status | Code | Description |\n|--------|------|-------------|\n| 429 | `rate_limited` | Rate limit exceeded. Check `Retry-After` header |\n| 500 | `internal_error` | Server error. Contact support with `X-Request-ID` |",
+        "language": "markdown",
+        "label": "After (lines 187-190)"
+      }
+    },
+    {
+      "id": "file-errors.md-del",
+      "type": "removed",
+      "file": "errors.md",
+      "description": "Deleted: errors.md (60 lines)",
+      "removed_content": {
+        "type": "code",
+        "content": "# Error Codes\n\nThe API uses standard HTTP status codes. Error responses include a JSON body with details.\n\n## Error Response Format\n\n```json\n{\n  \"error\": {\n    \"code\": \"invalid_request\",\n    \"message\": \"The request body is missing required field 'name'\",\n    \"details\": {\n      \"field\": \"name\",\n      \"reason\": \"required\"\n    }\n  }\n}\n```\n\n## Common Error Codes\n\n### 400 Bad Request\n\nThe request was malformed or missing required parameters.\n\n| Code | Message | Fix |\n|------|---------|-----|\n| `invalid_request` | Request body is invalid | Check JSON syntax |\n| `missing_field` | Required field missing | Include all required fields |\n| `invalid_field` | Field value is invalid | Check field type and constraints |\n\n### 401 Unauthorized\n\nAuthentication failed or was not provided.\n\n| Code | Message | Fix |\n|------|---------|-----|\n| `missing_auth` | No authorization header | Include `Authorization: Bearer <token>` |\n| `invalid_token` | Token is invalid or expired | Refresh your token or generate a new API key |\n\n### 403 Forbidden\n\nYou don't have permission for this action.\n\n| Code | Message | Fix |\n|------|---------|-----|\n| `insufficient_scope` | Token lacks required scope | Request additional OAuth scopes |\n| `role_required` | Your role can't perform this action | Contact your admin for elevated access |\n\n### 404 Not Found\n\nThe requested resource doesn't exist.\n\n### 429 Too Many Requests\n\nRate limit exceeded. Check the `Retry-After` header for when you can retry.\n\n### 500 Internal Server Error\n\nSomething went wrong on our end. If this persists, contact support with the `X-Request-ID` header value from the response.\n",
+        "language": "markdown"
+      }
+    }
+  ],
+  "comments": []
+}
