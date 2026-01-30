@@ -1,0 +1,51 @@
+diff -ru --ex Forked_From/artifact/csvjson/converter.py artifact/csvjson/converter.py
+--- Forked_From/artifact/csvjson/converter.py	2026-01-30 15:55:08
++++ artifact/csvjson/converter.py	2026-01-30 15:55:16
+@@ -7,7 +7,7 @@
+ def convert_csv_to_json(
+     filepath: str,
+     delimiter: str = ",",
+-    encoding: str = "utf-8",
++    encoding: str = "utf-8-sig",
+ ) -> List[Dict[str, Any]]:
+     """
+     Read a CSV file and return a list of dictionaries.
+@@ -15,7 +15,8 @@
+     Args:
+         filepath: Path to the CSV file.
+         delimiter: Column delimiter character.
+-        encoding: File encoding.
++        encoding: File encoding. Default is 'utf-8-sig' which handles
++                  BOM (byte order mark) transparently.
+ 
+     Returns:
+         List of dictionaries, one per row.
+diff -ru --ex Forked_From/artifact/tests/test_converter.py artifact/tests/test_converter.py
+--- Forked_From/artifact/tests/test_converter.py	2026-01-30 15:55:08
++++ artifact/tests/test_converter.py	2026-01-30 15:55:26
+@@ -77,3 +77,25 @@
+     def test_file_not_found(self):
+         with pytest.raises(FileNotFoundError):
+             convert_csv_to_json("/nonexistent/file.csv")
++
++    def test_unicode_characters(self):
++        path = self._write_csv("name,city\nMüller,Zürich\nJosé,São Paulo\n")
++        try:
++            result = convert_csv_to_json(path)
++            assert result[0]["name"] == "Müller"
++            assert result[0]["city"] == "Zürich"
++            assert result[1]["name"] == "José"
++        finally:
++            os.unlink(path)
++
++    def test_bom_handling(self):
++        """CSV files from Excel often have a UTF-8 BOM prefix."""
++        fd, path = tempfile.mkstemp(suffix=".csv")
++        with os.fdopen(fd, "wb") as f:
++            f.write(b"\xef\xbb\xbfname,age\nAlice,30\n")
++        try:
++            result = convert_csv_to_json(path)
++            assert "name" in result[0], f"Got keys: {list(result[0].keys())}"
++            assert result[0]["name"] == "Alice"
++        finally:
++            os.unlink(path)

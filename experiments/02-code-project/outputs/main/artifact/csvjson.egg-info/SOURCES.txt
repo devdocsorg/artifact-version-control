@@ -4,6 +4,8 @@ csvjson/__init__.py
 csvjson/cli.py
 csvjson/converter.py
 csvjson/formatters.py
+csvjson/schema_validators.py
+csvjson/type_validators.py
 csvjson/validators.py
 csvjson.egg-info/PKG-INFO
 csvjson.egg-info/SOURCES.txt
@@ -14,4 +16,6 @@ csvjson.egg-info/top_level.txt
 tests/__init__.py
 tests/test_converter.py
 tests/test_formatters.py
+tests/test_schema_validators.py
+tests/test_type_validators.py
 tests/test_validators.py

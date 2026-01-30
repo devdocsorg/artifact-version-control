@@ -77,25 +77,3 @@ class TestConvertCsvToJson:
     def test_file_not_found(self):
         with pytest.raises(FileNotFoundError):
             convert_csv_to_json("/nonexistent/file.csv")
-
-    def test_unicode_characters(self):
-        path = self._write_csv("name,city\nMüller,Zürich\nJosé,São Paulo\n")
-        try:
-            result = convert_csv_to_json(path)
-            assert result[0]["name"] == "Müller"
-            assert result[0]["city"] == "Zürich"
-            assert result[1]["name"] == "José"
-        finally:
-            os.unlink(path)
-
-    def test_bom_handling(self):
-        """CSV files from Excel often have a UTF-8 BOM prefix."""
-        fd, path = tempfile.mkstemp(suffix=".csv")
-        with os.fdopen(fd, "wb") as f:
-            f.write(b"\xef\xbb\xbfname,age\nAlice,30\n")
-        try:
-            result = convert_csv_to_json(path)
-            assert "name" in result[0], f"Got keys: {list(result[0].keys())}"
-            assert result[0]["name"] == "Alice"
-        finally:
-            os.unlink(path)
