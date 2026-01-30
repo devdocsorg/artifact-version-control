@@ -1,0 +1,66 @@
+[UNCHANGED: Lines 1-4]
+"""Output formatting options for csvjson."""
+import json
+from typing import List, Dict, Any
+
+[ADDED: Lines 5-10 (inserted after line 4)]
+Additions:
+- PyYAML import with graceful fallback (try/except ImportError)
+- HAS_YAML flag for runtime checking
+Reason: YAML support requires PyYAML; graceful import allows better error messages
+---
+try:
+    import yaml
+    HAS_YAML = True
+except ImportError:
+    HAS_YAML = False
+
+[MODIFIED: Line 17]
+Changes:
+- Updated docstring to list yaml as a format option
+Reason: Documentation accuracy
+---
+BEFORE:
+        fmt: Output format ('json' or 'jsonl').
+---
+AFTER:
+        fmt: Output format ('json', 'jsonl', or 'yaml').
+
+[MODIFIED: Lines 27-31]
+Changes:
+- Added yaml branch to format_output() dispatcher
+Reason: Route yaml format to new _format_yaml function
+---
+BEFORE:
+    if fmt == "json":
+        return _format_json(records, pretty=pretty)
+    elif fmt == "jsonl":
+        return _format_jsonl(records)
+    else:
+        raise ValueError(f"Unknown format: {fmt}")
+---
+AFTER:
+    if fmt == "json":
+        return _format_json(records, pretty=pretty)
+    elif fmt == "jsonl":
+        return _format_jsonl(records)
+    elif fmt == "yaml":
+        return _format_yaml(records)
+    else:
+        raise ValueError(f"Unknown format: {fmt}")
+
+[UNCHANGED: Lines 35-51]
+_format_json and _format_jsonl functions unchanged.
+
+[ADDED: Lines 52-60 (appended)]
+Additions:
+- New _format_yaml() function
+Reason: Core YAML formatting implementation
+---
+def _format_yaml(records: List[Dict[str, Any]]) -> str:
+    """Format as YAML."""
+    if not HAS_YAML:
+        raise ImportError(
+            "PyYAML is required for YAML output. Install with: pip install pyyaml"
+        )
+    return yaml.dump(records, default_flow_style=False, allow_unicode=True)

@@ -1,0 +1,11 @@
+[UNCHANGED: Lines 1-48]
+
+[ADDED: Lines 49-50 (inserted after test_valid_jsonl)]
+Additions:
+- test_valid_yaml test case
+Reason: Validate that "yaml" is accepted as a valid format
+---
+    def test_valid_yaml(self):
+        assert validate_output_format("yaml") == []
+
+[UNCHANGED: Lines 51-end]
