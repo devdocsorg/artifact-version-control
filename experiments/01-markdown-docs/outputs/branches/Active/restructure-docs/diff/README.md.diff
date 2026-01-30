@@ -1,0 +1,17 @@
+--- Forked_From/artifact/README.md	2026-01-30 15:45:04
++++ artifact/README.md	2026-01-30 15:45:38
+@@ -6,13 +6,11 @@
+ 
+ 1. [Get your API key](authentication.md)
+ 2. [Make your first request](endpoints.md)
+-3. [Handle errors gracefully](errors.md)
+ 
+ ## Table of Contents
+ 
+ - [Authentication](authentication.md) — API keys, OAuth, and token management
+-- [Endpoints](endpoints.md) — Full API reference
+-- [Error Codes](errors.md) — Error responses and troubleshooting
++- [Endpoints](endpoints.md) — Full API reference with inline error codes
+ - [Changelog](changelog.md) — Version history and breaking changes
+ 
+ ## Base URL
