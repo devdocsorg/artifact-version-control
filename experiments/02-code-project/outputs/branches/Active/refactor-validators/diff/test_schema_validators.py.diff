@@ -1,7 +1,0 @@
-[ADDED: New file — tests/test_schema_validators.py]
-Additions:
-- TestValidateFilePath class — 5 tests (migrated from test_validators.py)
-- TestValidateCsvStructure class — 2 tests (NEW)
-Reason: Test the new schema_validators module directly
----
-(See full file: tests/test_schema_validators.py — 65 lines)
