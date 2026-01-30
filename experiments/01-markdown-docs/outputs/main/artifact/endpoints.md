@@ -24,7 +24,7 @@ Returns a list of users in your organization.
 **Example:**
 
 ```bash
-curl -H "Authorization: Bearer YOUR_API_KEY" \
+curl -H "X-API-Key: YOUR_API_KEY" \
   "https://api.acme.com/v2/users?limit=10"
 ```
 
@@ -60,7 +60,7 @@ Returns a single user by ID.
 **Example:**
 
 ```bash
-curl -H "Authorization: Bearer YOUR_API_KEY" \
+curl -H "X-API-Key: YOUR_API_KEY" \
   "https://api.acme.com/v2/users/usr_123"
 ```
 
@@ -102,7 +102,7 @@ Returns all projects accessible to the authenticated user.
 **Example:**
 
 ```bash
-curl -H "Authorization: Bearer YOUR_API_KEY" \
+curl -H "X-API-Key: YOUR_API_KEY" \
   "https://api.acme.com/v2/projects?status=active"
 ```
 

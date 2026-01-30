@@ -1,5 +1,13 @@
 # Main Branch History
 
+## v1.2 — Merged: fix-auth-examples
+- **Date:** 2025-01-31
+- **Branch:** fix-auth-examples
+- **Conflict resolution:** endpoints.md changed in both main (pagination meta) and branch (auth headers). Changes were on different lines — merged cleanly by applying branch's sed fix to main's version.
+- **Changes:**
+  - Modified authentication.md: Fixed API key header format, OAuth scopes, added Content-Type headers, security notes
+  - Modified endpoints.md: Updated auth header in 3 curl examples (X-API-Key instead of Bearer)
+
 ## v1.1 — Merged: add-pagination-docs
 - **Date:** 2025-01-31
 - **Branch:** add-pagination-docs
