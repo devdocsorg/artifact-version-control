@@ -1,0 +1,242 @@
+--- Forked_From/artifact/endpoints.md	2026-01-30 15:45:04
++++ artifact/endpoints.md	2026-01-30 15:45:27
+@@ -2,28 +2,28 @@
+ 
+ All endpoints use the base URL `https://api.acme.com/v2`.
+ 
+-## Users
++## Projects
+ 
+-### List Users
++### List Projects
+ 
+ ```
+-GET /users
++GET /projects
+ ```
+ 
+-Returns a list of users in your organization.
++Returns all projects accessible to the authenticated user.
+ 
+ **Parameters:**
+ 
+ | Parameter | Type | Required | Description |
+ |-----------|------|----------|-------------|
+-| `limit` | integer | No | Max results (default: 20, max: 100) |
+-| `offset` | integer | No | Pagination offset |
++| `status` | string | No | Filter by status: `active`, `archived` |
++| `limit` | integer | No | Max results (default: 20) |
+ 
+ **Example:**
+ 
+ ```bash
+ curl -H "Authorization: Bearer YOUR_API_KEY" \
+-  "https://api.acme.com/v2/users?limit=10"
++  "https://api.acme.com/v2/projects?status=active"
+ ```
+ 
+ **Response:**
+@@ -32,71 +32,82 @@
+ {
+   "data": [
+     {
+-      "id": "usr_123",
+-      "name": "Jane Doe",
+-      "email": "jane@example.com",
+-      "role": "admin"
++      "id": "proj_456",
++      "name": "Website Redesign",
++      "status": "active",
++      "created_at": "2025-01-15T10:00:00Z"
+     }
+   ],
+-  "total": 42
++  "total": 5
+ }
+ ```
+ 
+-### Get User
++**Errors:**
+ 
++| Status | Code | Description |
++|--------|------|-------------|
++| 400 | `invalid_field` | Invalid `status` value. Must be `active` or `archived` |
++| 401 | `missing_auth` | No authorization header provided |
++
++### Create Project
++
+ ```
+-GET /users/:id
++POST /projects
+ ```
+ 
+-Returns a single user by ID.
++**Body:**
+ 
+-**Example:**
+-
+-```bash
+-curl -H "Authorization: Bearer YOUR_API_KEY" \
+-  "https://api.acme.com/v2/users/usr_123"
++```json
++{
++  "name": "New Project",
++  "description": "Project description"
++}
+ ```
+ 
+-### Create User
++**Errors:**
+ 
++| Status | Code | Description |
++|--------|------|-------------|
++| 400 | `missing_field` | `name` is required |
++| 403 | `role_required` | Only admins can create projects |
++
++### Delete Project
++
+ ```
+-POST /users
++DELETE /projects/:id
+ ```
+ 
+-Creates a new user.
++Permanently deletes a project and all associated data. This action cannot be undone.
+ 
+-**Body:**
++**Errors:**
+ 
+-```json
+-{
+-  "name": "John Smith",
+-  "email": "john@example.com",
+-  "role": "member"
+-}
+-```
++| Status | Code | Description |
++|--------|------|-------------|
++| 404 | `not_found` | Project does not exist |
++| 403 | `role_required` | Only admins can delete projects |
+ 
+-## Projects
++## Users
+ 
+-### List Projects
++### List Users
+ 
+ ```
+-GET /projects
++GET /users
+ ```
+ 
+-Returns all projects accessible to the authenticated user.
++Returns a list of users in your organization.
+ 
+ **Parameters:**
+ 
+ | Parameter | Type | Required | Description |
+ |-----------|------|----------|-------------|
+-| `status` | string | No | Filter by status: `active`, `archived` |
+-| `limit` | integer | No | Max results (default: 20) |
++| `limit` | integer | No | Max results (default: 20, max: 100) |
++| `offset` | integer | No | Pagination offset |
+ 
+ **Example:**
+ 
+ ```bash
+ curl -H "Authorization: Bearer YOUR_API_KEY" \
+-  "https://api.acme.com/v2/projects?status=active"
++  "https://api.acme.com/v2/users?limit=10"
+ ```
+ 
+ **Response:**
+@@ -105,35 +116,75 @@
+ {
+   "data": [
+     {
+-      "id": "proj_456",
+-      "name": "Website Redesign",
+-      "status": "active",
+-      "created_at": "2025-01-15T10:00:00Z"
++      "id": "usr_123",
++      "name": "Jane Doe",
++      "email": "jane@example.com",
++      "role": "admin"
+     }
+   ],
+-  "total": 5
++  "total": 42
+ }
+ ```
+ 
+-### Create Project
++**Errors:**
+ 
++| Status | Code | Description |
++|--------|------|-------------|
++| 401 | `missing_auth` | No authorization header provided |
++| 401 | `invalid_token` | Token is invalid or expired |
++
++### Get User
++
+ ```
+-POST /projects
++GET /users/:id
+ ```
+ 
++Returns a single user by ID.
++
++**Example:**
++
++```bash
++curl -H "Authorization: Bearer YOUR_API_KEY" \
++  "https://api.acme.com/v2/users/usr_123"
++```
++
++**Errors:**
++
++| Status | Code | Description |
++|--------|------|-------------|
++| 404 | `not_found` | User does not exist |
++
++### Create User
++
++```
++POST /users
++```
++
++Creates a new user.
++
+ **Body:**
+ 
+ ```json
+ {
+-  "name": "New Project",
+-  "description": "Project description"
++  "name": "John Smith",
++  "email": "john@example.com",
++  "role": "member"
+ }
+ ```
+ 
+-### Delete Project
++**Errors:**
+ 
+-```
+-DELETE /projects/:id
+-```
++| Status | Code | Description |
++|--------|------|-------------|
++| 400 | `missing_field` | `name` and `email` are required |
++| 400 | `invalid_field` | `role` must be `admin`, `member`, or `viewer` |
++| 409 | `duplicate` | A user with this email already exists |
+ 
+-Permanently deletes a project and all associated data. This action cannot be undone.
++## Common Errors
++
++All endpoints may return these errors:
++
++| Status | Code | Description |
++|--------|------|-------------|
++| 429 | `rate_limited` | Rate limit exceeded. Check `Retry-After` header |
++| 500 | `internal_error` | Server error. Contact support with `X-Request-ID` |
