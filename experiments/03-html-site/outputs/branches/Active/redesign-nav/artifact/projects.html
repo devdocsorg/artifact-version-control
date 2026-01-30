@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects — Alex Chen</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <nav>
+    <div class="nav-container">
+      <div class="logo">Alex<span>Chen</span></div>
+      <button class="hamburger" aria-label="Toggle navigation" aria-expanded="false">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+      <ul class="nav-menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="projects.html" class="active">Projects</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h2 class="section-title">All Projects</h2>
+
+    <div class="card-grid">
+
+      <div class="card">
+        <div class="card-image">[ TaskFlow Screenshot ]</div>
+        <div class="card-body">
+          <h3>TaskFlow</h3>
+          <p>A real-time project management app with drag-and-drop boards, real-time collaboration, and smart notifications. Built for teams of 5-50.</p>
+          <span class="tag">React</span>
+          <span class="tag">Firebase</span>
+          <span class="tag">Tailwind</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-image">[ WeatherLens Screenshot ]</div>
+        <div class="card-body">
+          <h3>WeatherLens</h3>
+          <p>Interactive weather data visualization using D3.js. Displays forecasts, historical trends, and severe weather alerts with beautiful animated charts.</p>
+          <span class="tag">D3.js</span>
+          <span class="tag">API</span>
+          <span class="tag">SVG</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-image">[ CodeCollab Screenshot ]</div>
+        <div class="card-body">
+          <h3>CodeCollab</h3>
+          <p>Collaborative code editor with real-time syncing, video chat, and AI-powered code suggestions. Supports 20+ languages with syntax highlighting.</p>
+          <span class="tag">WebRTC</span>
+          <span class="tag">Node.js</span>
+          <span class="tag">Monaco</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-image">[ ShopSmart Screenshot ]</div>
+        <div class="card-body">
+          <h3>ShopSmart</h3>
+          <p>E-commerce platform with personalized recommendations, one-click checkout, and inventory management. Processes 10K+ orders daily.</p>
+          <span class="tag">Next.js</span>
+          <span class="tag">Stripe</span>
+          <span class="tag">PostgreSQL</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-image">[ FitTrack Screenshot ]</div>
+        <div class="card-body">
+          <h3>FitTrack</h3>
+          <p>Fitness tracking app with custom workout plans, progress photos, and social challenges. Integrates with Apple Health and Google Fit.</p>
+          <span class="tag">React Native</span>
+          <span class="tag">GraphQL</span>
+          <span class="tag">AWS</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-image">[ DevBlog Screenshot ]</div>
+        <div class="card-body">
+          <h3>DevBlog Engine</h3>
+          <p>Minimalist blogging platform with Markdown support, code highlighting, RSS feeds, and SEO optimization. Powers this very site.</p>
+          <span class="tag">Astro</span>
+          <span class="tag">MDX</span>
+          <span class="tag">Cloudflare</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Alex Chen. Built with care in Toronto.</p>
+    <p><a href="mailto:alex@example.com">alex@example.com</a> · <a href="#">GitHub</a> · <a href="#">LinkedIn</a></p>
+  </footer>
+
+  <script>
+    const hamburger = document.querySelector('.hamburger');
+    const navMenu = document.querySelector('.nav-menu');
+    
+    hamburger.addEventListener('click', () => {
+      const isOpen = navMenu.classList.toggle('nav-open');
+      hamburger.classList.toggle('is-active');
+      hamburger.setAttribute('aria-expanded', isOpen);
+    });
+
+    document.querySelectorAll('.nav-menu a').forEach(link => {
+      link.addEventListener('click', () => {
+        navMenu.classList.remove('nav-open');
+        hamburger.classList.remove('is-active');
+        hamburger.setAttribute('aria-expanded', 'false');
+      });
+    });
+  </script>
+
+</body>
+</html>
