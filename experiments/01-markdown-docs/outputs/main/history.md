@@ -4,8 +4,8 @@
 - **Date:** 2025-01-31
 - **Branch:** restructure-docs
 - **Conflict resolution:** 
-  - endpoints.md: TRUE CONFLICT — branch restructured entire file (reordered sections, added inline errors) while main had pagination meta + auth header changes. Manual merge required: took branch's structure, applied main's pagination note/meta objects/X-API-Key headers.
-  - README.md: CONFLICT — both modified TOC area. Main added pagination link, branch removed errors.md links. Merged both changes.
+  - endpoints.md: TRUE CONFLICT — branch restructured entire file (reordered sections, added inline errors) while main had pagination meta + auth header changes. Manual merge: took branch's structure, applied main's pagination note/meta objects/X-API-Key headers.
+  - README.md: CONFLICT — both modified TOC area. Main added pagination link, branch removed errors.md links. Merged both changes manually.
   - errors.md: branch deleted, main unchanged → deleted.
   - authentication.md: main changed (auth fixes), branch unchanged → kept main's version.
   - pagination.md: new in main, not in fork/branch → kept.
@@ -19,25 +19,21 @@
 ## v1.2 — Merged: fix-auth-examples
 - **Date:** 2025-01-31
 - **Branch:** fix-auth-examples
-- **Conflict resolution:** endpoints.md changed in both main (pagination meta) and branch (auth headers). Changes were on different lines — merged cleanly by applying branch's sed fix to main's version.
+- **Conflict resolution:** endpoints.md changed in both main (pagination meta) and branch (auth headers). Changes on different lines — merged cleanly via sed.
 - **Changes:**
-  - Modified authentication.md: Fixed API key header format, OAuth scopes, added Content-Type headers, security notes
-  - Modified endpoints.md: Updated auth header in 3 curl examples (X-API-Key instead of Bearer)
+  - Modified authentication.md: Fixed API key header, OAuth scopes, Content-Type headers, security notes
+  - Modified endpoints.md: Updated auth header in 3 curl examples
 
 ## v1.1 — Merged: add-pagination-docs
 - **Date:** 2025-01-31
 - **Branch:** add-pagination-docs
 - **Changes:**
-  - Created pagination.md with full pagination guide (parameters, response metadata, examples, best practices)
-  - Modified endpoints.md: added pagination note at top, updated response examples to include `meta` object
-  - Modified README.md: added pagination.md link to table of contents
+  - Created pagination.md with full pagination guide
+  - Modified endpoints.md: pagination note + meta objects in responses
+  - Modified README.md: added pagination.md to TOC
 
 ## v1.0 — Initial Commit
 - **Date:** 2025-01-31
 - **Author:** Experiment 01 Setup
 - **Changes:**
-  - Created README.md with API overview and table of contents
-  - Created authentication.md with API key and OAuth 2.0 docs
-  - Created endpoints.md with Users and Projects API reference
-  - Created errors.md with error codes and troubleshooting
-  - Created changelog.md with version history
+  - Created README.md, authentication.md, endpoints.md, errors.md, changelog.md
