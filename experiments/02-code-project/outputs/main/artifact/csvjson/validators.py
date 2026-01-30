@@ -4,7 +4,7 @@ import os
 from typing import List
 
 
-SUPPORTED_FORMATS = ["json", "jsonl"]
+SUPPORTED_FORMATS = ["json", "jsonl", "yaml"]
 
 
 def validate_file_path(filepath: str) -> List[str]:

@@ -3,8 +3,10 @@ Name: csvjson
 Version: 1.0.0
 Summary: A CLI tool to convert CSV files to JSON
 Requires-Python: >=3.8
+Requires-Dist: pyyaml>=6.0
 Provides-Extra: dev
 Requires-Dist: pytest>=7.0; extra == "dev"
 Dynamic: provides-extra
+Dynamic: requires-dist
 Dynamic: requires-python
 Dynamic: summary

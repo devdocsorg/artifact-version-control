@@ -47,6 +47,9 @@ class TestValidateOutputFormat:
     def test_valid_jsonl(self):
         assert validate_output_format("jsonl") == []
 
+    def test_valid_yaml(self):
+        assert validate_output_format("yaml") == []
+
     def test_invalid_format(self):
         errors = validate_output_format("xml")
         assert len(errors) == 1

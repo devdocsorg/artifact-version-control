@@ -25,8 +25,8 @@ def create_parser():
     )
     parser.add_argument(
         "-f", "--format",
-        help="Output format: json (default), jsonl",
-        choices=["json", "jsonl"],
+        help="Output format: json (default), jsonl, yaml",
+        choices=["json", "jsonl", "yaml"],
         default="json",
     )
     parser.add_argument(

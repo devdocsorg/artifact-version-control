@@ -13,4 +13,5 @@ csvjson.egg-info/requires.txt
 csvjson.egg-info/top_level.txt
 tests/__init__.py
 tests/test_converter.py
+tests/test_formatters.py
 tests/test_validators.py

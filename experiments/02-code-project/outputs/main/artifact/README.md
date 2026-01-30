@@ -20,6 +20,9 @@ csvjson data.csv --pretty
 # JSON Lines format
 csvjson data.csv --format jsonl
 
+# YAML format
+csvjson data.csv --format yaml
+
 # Custom delimiter
 csvjson data.csv --delimiter ";"
 
@@ -33,6 +36,7 @@ csvjson data.csv -o output.json
 |--------|-------------|
 | `json`  | Standard JSON array (default) |
 | `jsonl` | JSON Lines — one JSON object per line |
+| `yaml`  | YAML format (requires PyYAML) |
 
 ## Features
 
