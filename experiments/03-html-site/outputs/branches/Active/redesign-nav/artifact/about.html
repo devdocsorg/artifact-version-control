@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — Alex Chen</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <nav>
+    <div class="nav-container">
+      <div class="logo">Alex<span>Chen</span></div>
+      <button class="hamburger" aria-label="Toggle menu" aria-expanded="false">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html" class="active">About</a></li>
+        <li><a href="projects.html">Projects</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h2 class="section-title">About Me</h2>
+
+    <div class="about-content">
+      <div class="about-photo">[ Photo Placeholder ]</div>
+      <div class="about-text">
+        <h2>Who I Am</h2>
+        <p>
+          I'm a full-stack developer with 6 years of experience building web applications.
+          I specialize in React, Node.js, and cloud architecture. When I'm not coding,
+          you'll find me hiking the Bruce Trail or experimenting with sourdough.
+        </p>
+        <p>
+          I believe in clean code, accessible design, and shipping things that work.
+          Currently open to freelance and contract opportunities.
+        </p>
+
+        <h2>Skills</h2>
+        <ul class="skills-list">
+          <li>JavaScript / TypeScript</li>
+          <li>React</li>
+          <li>Node.js</li>
+          <li>Python</li>
+          <li>PostgreSQL</li>
+          <li>AWS</li>
+          <li>Docker</li>
+          <li>Figma</li>
+          <li>Git</li>
+        </ul>
+
+        <h2 style="margin-top: 2rem;">Experience</h2>
+        <p><strong>Senior Developer</strong> — TechCorp (2021–Present)</p>
+        <p>Leading a team of 5, building internal tools and customer-facing dashboards.</p>
+        <p style="margin-top: 1rem;"><strong>Full Stack Developer</strong> — StartupXYZ (2019–2021)</p>
+        <p>Built the core product from prototype to 50K users.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Alex Chen. Built with care in Toronto.</p>
+    <p><a href="mailto:alex@example.com">alex@example.com</a> · <a href="#">GitHub</a> · <a href="#">LinkedIn</a></p>
+  </footer>
+
+  <script>
+    const hamburger = document.querySelector(".hamburger");
+    const navLinks = document.querySelector(".nav-links");
+    hamburger.addEventListener("click", () => {
+      navLinks.classList.toggle("open");
+      hamburger.classList.toggle("active");
+      hamburger.setAttribute("aria-expanded",
+        hamburger.getAttribute("aria-expanded") === "true" ? "false" : "true");
+    });
+  </script>
+
+</body>
+</html>

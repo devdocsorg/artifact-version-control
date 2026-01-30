@@ -1,0 +1,85 @@
+# Pagination Guide
+
+All list endpoints in the Acme API support pagination to help you efficiently retrieve large datasets.
+
+## How Pagination Works
+
+List endpoints return results in pages. Use the `limit` and `offset` parameters to control which page you receive.
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | integer | 20 | Number of results per page (max: 100) |
+| `offset` | integer | 0 | Number of results to skip |
+
+### Response Metadata
+
+Every paginated response includes a `meta` object:
+
+```json
+{
+  "data": [...],
+  "meta": {
+    "total": 142,
+    "limit": 20,
+    "offset": 0,
+    "has_more": true
+  }
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `total` | Total number of results across all pages |
+| `limit` | The limit used for this request |
+| `offset` | The offset used for this request |
+| `has_more` | Whether more results exist beyond this page |
+
+## Examples
+
+### First Page
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://api.acme.com/v2/users?limit=20&offset=0"
+```
+
+### Second Page
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://api.acme.com/v2/users?limit=20&offset=20"
+```
+
+### Iterating All Pages
+
+```python
+import requests
+
+offset = 0
+limit = 100
+all_users = []
+
+while True:
+    resp = requests.get(
+        "https://api.acme.com/v2/users",
+        headers={"Authorization": "Bearer YOUR_API_KEY"},
+        params={"limit": limit, "offset": offset}
+    )
+    data = resp.json()
+    all_users.extend(data["data"])
+    
+    if not data["meta"]["has_more"]:
+        break
+    offset += limit
+
+print(f"Fetched {len(all_users)} users")
+```
+
+## Best Practices
+
+1. **Use reasonable page sizes.** Default (20) is fine for most cases. Use 100 for bulk operations.
+2. **Don't skip pages.** Always iterate sequentially to avoid missing records if data changes between requests.
+3. **Check `has_more`.** Don't rely on `total` for loop termination — new records may be added during iteration.
+4. **Cache when possible.** If data doesn't change frequently, cache pages to reduce API calls.

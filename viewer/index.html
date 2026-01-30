@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Artifact Diff Viewer</title>
+<style>
+:root{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--bdr:#30363d;--txt:#e6edf3;--muted:#8b949e;--dim:#484f58;
+--grn:#3fb950;--grn-bg:rgba(63,185,80,.1);--grn-bdr:rgba(63,185,80,.4);
+--red:#f85149;--red-bg:rgba(248,81,73,.1);--red-bdr:rgba(248,81,73,.4);
+--blu:#58a6ff;--blu-bg:rgba(88,166,255,.1);
+--yel:#d29922;--yel-bg:rgba(210,153,34,.1);
+--pur:#bc8cff;--r:6px;--mono:'SF Mono','Fira Code',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--txt);line-height:1.6}
+.hdr{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:16px 24px;position:sticky;top:0;z-index:100}
+.hdr-top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.hdr h1{font-size:20px}
+.branch{background:var(--blu-bg);color:var(--blu);padding:2px 8px;border-radius:12px;font-size:12px;font-family:var(--mono)}
+.status{padding:2px 8px;border-radius:12px;font-size:12px;font-weight:600;text-transform:uppercase}
+.s-active{background:var(--yel-bg);color:var(--yel)}.s-merged{background:var(--grn-bg);color:var(--grn)}.s-canceled{background:var(--red-bg);color:var(--red)}
+.stats{display:flex;gap:16px;font-size:14px;color:var(--muted)}
+.sg{color:var(--grn)}.sr{color:var(--red)}
+.layout{display:flex;min-height:calc(100vh - 100px)}
+.side{width:280px;min-width:280px;background:var(--bg2);border-right:1px solid var(--bdr);overflow-y:auto;padding:12px 0}
+.side h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:8px 16px}
+.fi{display:flex;align-items:center;gap:8px;padding:6px 16px;cursor:pointer;font-size:13px;font-family:var(--mono)}
+.fi:hover{background:var(--bg3)}
+.fd{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.fd.added{background:var(--grn)}.fd.removed{background:var(--red)}.fd.modified{background:var(--yel)}.fd.unchanged{background:var(--dim)}
+.fn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fs{margin-left:auto;font-size:11px;color:var(--dim)}
+.cnt{flex:1;overflow-y:auto;padding:24px;padding-bottom:80px}
+.pr{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:24px;white-space:pre-wrap;font-size:14px}
+.cb{border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:16px;overflow:hidden}
+.ch{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg2);border-bottom:1px solid var(--bdr);cursor:pointer;user-select:none}
+.ch:hover{background:var(--bg3)}
+.ct{font-size:11px;font-weight:600;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.3px}
+.ct-added{background:var(--grn-bg);color:var(--grn);border:1px solid var(--grn-bdr)}
+.ct-removed{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bdr)}
+.ct-modified{background:var(--yel-bg);color:var(--yel);border:1px solid rgba(210,153,34,.4)}
+.ct-unchanged{background:var(--bg3);color:var(--dim)}
+.cf{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.cl{font-family:var(--mono);font-size:12px;color:var(--dim);margin-left:auto}
+.cv{color:var(--dim);transition:transform .2s}.cv.ex{transform:rotate(90deg)}
+.body{padding:0}.body.hide{display:none}
+.desc{padding:8px 12px;font-size:13px;color:var(--muted);background:var(--bg2);border-bottom:1px solid var(--bdr)}
+.code{font-family:var(--mono);font-size:13px;line-height:1.5;overflow-x:auto;tab-size:4}
+.code pre{padding:12px;margin:0;white-space:pre}
+.code-a{background:var(--grn-bg)}.code-r{background:var(--red-bg)}
+.split{display:grid;grid-template-columns:1fr 1fr}
+.pane{overflow-x:auto}.pane:first-child{border-right:1px solid var(--bdr)}
+.lbl{display:block;padding:4px 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.lbl-b{background:var(--red-bg);color:var(--red)}.lbl-a{background:var(--grn-bg);color:var(--grn)}
+.img-diff{display:grid;grid-template-columns:1fr 1fr}.img-diff img{width:100%;display:block}
+.cmt-sec{border-top:1px solid var(--bdr);padding:8px 12px}
+.cmt{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr)}.cmt:last-of-type{border:none}
+.cmt-av{width:28px;height:28px;border-radius:50%;background:var(--pur);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.cmt-au{font-size:13px;font-weight:600}.cmt-tx{font-size:13px;color:var(--muted)}
+.cmt-st{font-size:11px;padding:1px 5px;border-radius:3px;margin-left:8px}
+.cmt-st.open{background:var(--yel-bg);color:var(--yel)}.cmt-st.resolved{background:var(--grn-bg);color:var(--grn)}
+.ac{display:flex;gap:8px;margin-top:8px}
+.ac input{flex:1;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:6px 10px;color:var(--txt);font-size:13px}
+.ac input:focus{outline:none;border-color:var(--blu)}
+.ac button{background:var(--blu);color:#fff;border:none;border-radius:var(--r);padding:6px 12px;font-size:13px;cursor:pointer}
+.bar{position:fixed;bottom:0;left:280px;right:0;background:var(--bg2);border-top:1px solid var(--bdr);padding:12px 24px;display:flex;gap:12px;align-items:center}
+.bar button{padding:8px 16px;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;border:1px solid var(--bdr)}
+.ba{background:var(--grn);color:#fff;border-color:var(--grn)}.br{background:var(--red);color:#fff;border-color:var(--red)}
+.bc{background:var(--bg3);color:var(--txt)}.be{background:var(--bg3);color:var(--txt);margin-left:auto}
+.load{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px}
+.load h2{font-size:24px}.load p{color:var(--muted);font-size:14px}
+.drop{border:2px dashed var(--bdr);border-radius:12px;padding:48px;text-align:center;cursor:pointer;transition:border-color .2s}
+.drop:hover,.drop.active{border-color:var(--blu)}
+.fgh{padding:12px 24px 8px;display:flex;align-items:center;gap:8px}
+.fgh h2{font-size:16px;font-family:var(--mono)}
+@media(max-width:768px){.side{display:none}.bar{left:0}.split{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="load" id="ls">
+<h2>📦 Artifact Diff Viewer</h2>
+<p>Load a DiffBundle JSON to review changes</p>
+<div class="drop" id="dz" onclick="document.getElementById('fi').click()">
+<p style="font-size:48px;margin-bottom:12px">📄</p>
+<p>Drop diff_bundle.json here or click to browse</p>
+<p style="font-size:12px;margin-top:8px;color:var(--dim)">Generate: <code>python text_diff.py before/ after/ -o diff_bundle.json</code></p>
+</div>
+<input type="file" id="fi" accept=".json" style="display:none"/>
+<p style="margin-top:24px;font-size:12px;color:var(--dim)">Or pass <code>?bundle=path/to/file.json</code></p>
+</div>
+<div id="vw" style="display:none">
+<div class="hdr">
+<div class="hdr-top"><h1 id="pt">PR</h1><span class="branch" id="bn"></span><span class="status" id="sb"></span></div>
+<div class="stats" id="hs"></div>
+</div>
+<div class="layout">
+<div class="side" id="sd"><h3>Files</h3><div id="fl"></div></div>
+<div class="cnt" id="cn"><div class="pr" id="pd"></div><div id="cl"></div></div>
+</div>
+<div class="bar">
+<button class="ba" onclick="ss('merged')">✓ Approve</button>
+<button class="br" onclick="ss('canceled')">✗ Reject</button>
+<button class="bc" onclick="ec()">💬 Comments</button>
+<button class="be" onclick="eb()">⬇ Export</button>
+</div>
+</div>
+</div>
+<script>
+let B=null,CM={};
+const P=new URLSearchParams(location.search),bp=P.get('bundle');
+if(bp)fetch(bp).then(r=>r.json()).then(d=>load(d)).catch(e=>console.error(e));
+document.getElementById('fi').onchange=e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=ev=>load(JSON.parse(ev.target.result));r.readAsText(f)}};
+const dz=document.getElementById('dz');
+dz.ondragover=e=>{e.preventDefault();dz.classList.add('active')};
+dz.ondragleave=()=>dz.classList.remove('active');
+dz.ondrop=e=>{e.preventDefault();dz.classList.remove('active');const f=e.dataTransfer.files[0];if(f){const r=new FileReader();r.onload=ev=>load(JSON.parse(ev.target.result));r.readAsText(f)}};
+
+function load(d){B=d;CM={};(B.comments||[]).forEach(c=>{if(!CM[c.change_id])CM[c.change_id]=[];CM[c.change_id].push(c)});
+document.getElementById('ls').style.display='none';document.getElementById('vw').style.display='block';
+rH();rS();rC()}
+
+function rH(){const m=B.metadata,s=B.summary.stats;
+document.getElementById('pt').textContent=m.pr_title||`Branch: ${m.branch_name}`;
+document.getElementById('bn').textContent=m.branch_name;
+const b=document.getElementById('sb');b.textContent=m.status;b.className=`status s-${m.status}`;
+document.getElementById('hs').innerHTML=`<span>${s.files_changed+s.files_added+s.files_removed} files</span><span class="sg">+${s.total_additions}</span><span class="sr">-${s.total_removals}</span><span style="color:var(--dim)">${m.artifact_type} · ${new Date(m.created_at).toLocaleDateString()}</span>`;
+const d=document.getElementById('pd');if(m.pr_description){d.textContent=m.pr_description;d.style.display='block'}else d.style.display='none'}
+
+function rS(){const l=document.getElementById('fl');l.innerHTML='';
+B.summary.files.forEach(f=>{const i=document.createElement('div');i.className='fi';
+i.innerHTML=`<span class="fd ${f.status}"></span><span class="fn">${f.path}</span>${f.description?`<span class="fs">${f.description}</span>`:''}`;
+i.onclick=()=>{const e=document.querySelector(`[data-file="${f.path}"]`);if(e)e.scrollIntoView({behavior:'smooth',block:'start'})};l.appendChild(i)})}
+
+function rC(){const c=document.getElementById('cl');c.innerHTML='';
+const bf={};B.changes.forEach(ch=>{if(!bf[ch.file])bf[ch.file]=[];bf[ch.file].push(ch)});
+Object.keys(bf).forEach(f=>{const fi=B.summary.files.find(x=>x.path===f);const st=fi?fi.status:'modified';
+const h=document.createElement('div');h.className='fgh';h.setAttribute('data-file',f);
+h.innerHTML=`<h2>${f}</h2><span class="ct ct-${st}">${st}</span>`;c.appendChild(h);
+bf[f].forEach(ch=>c.appendChild(mkC(ch)))})}
+
+function mkC(ch){const b=document.createElement('div');b.className='cb';
+const col=ch.collapsed!==false&&ch.type==='unchanged';
+const h=document.createElement('div');h.className='ch';
+h.innerHTML=`<span class="cv ${col?'':'ex'}">▶</span><span class="ct ct-${ch.type}">${ch.type}</span><span style="font-size:13px">${ch.description||''}</span><span class="cl">${ch.location||''}</span>`;
+h.onclick=()=>{const bd=b.querySelector('.body');const cv=h.querySelector('.cv');bd.classList.toggle('hide');cv.classList.toggle('ex')};
+b.appendChild(h);
+const bd=document.createElement('div');bd.className=`body ${col?'hide':''}`;
+if(ch.reason){const r=document.createElement('div');r.className='desc';r.textContent=`Reason: ${ch.reason}`;bd.appendChild(r)}
+if(ch.type==='modified'&&ch.before&&ch.after)bd.appendChild(mkSplit(ch.before,ch.after));
+else if(ch.type==='added'&&ch.content)bd.appendChild(mkR(ch.content,'code-a'));
+else if(ch.type==='removed'&&ch.removed_content)bd.appendChild(mkR(ch.removed_content,'code-r'));
+else if(ch.content)bd.appendChild(mkR(ch.content));
+const cms=CM[ch.id]||[];if(cms.length>0||ch.type!=='unchanged')bd.appendChild(mkCms(ch.id,cms));
+b.appendChild(bd);return b}
+
+function mkR(r,cls=''){const e=document.createElement('div');
+if(r.type==='image'){e.className='img-pane';const i=document.createElement('img');i.src=r.content;i.style.width='100%';e.appendChild(i);if(r.label){const l=document.createElement('span');l.className='lbl';l.textContent=r.label;e.appendChild(l)}}
+else if(r.type==='html'){e.innerHTML=r.content}
+else if(r.type==='table'){e.className='table-diff';e.innerHTML=r.content}
+else{e.className=`code ${cls}`;const p=document.createElement('pre');p.textContent=r.content;e.appendChild(p)}
+return e}
+
+function mkSplit(before,after){const s=document.createElement('div');s.className='split';
+const lp=document.createElement('div');lp.className='pane';
+const ll=document.createElement('span');ll.className='lbl lbl-b';ll.textContent=before.label||'BEFORE';
+lp.appendChild(ll);lp.appendChild(mkR(before,'code-r'));
+const rp=document.createElement('div');rp.className='pane';
+const rl=document.createElement('span');rl.className='lbl lbl-a';rl.textContent=after.label||'AFTER';
+rp.appendChild(rl);rp.appendChild(mkR(after,'code-a'));
+s.appendChild(lp);s.appendChild(rp);return s}
+
+function mkCms(cid,cms){const s=document.createElement('div');s.className='cmt-sec';
+cms.forEach(c=>{const d=document.createElement('div');d.className='cmt';
+d.innerHTML=`<div class="cmt-av">${(c.author||'?')[0].toUpperCase()}</div><div><div class="cmt-au">${c.author||'Reviewer'}<span class="cmt-st ${c.status||'open'}">${c.status||'open'}</span></div><div class="cmt-tx">${c.text}</div></div>`;
+s.appendChild(d)});
+const f=document.createElement('div');f.className='ac';
+f.innerHTML=`<input type="text" placeholder="Add a comment..." onkeydown="if(event.key==='Enter')addC('${cid}',this)"/><button onclick="addC('${cid}',this.previousElementSibling)">Comment</button>`;
+s.appendChild(f);return s}
+
+function addC(cid,inp){const t=inp.value.trim();if(!t)return;
+const c={id:`c-${Date.now()}`,change_id:cid,author:'Reviewer',text:t,status:'open',created_at:new Date().toISOString()};
+if(!B.comments)B.comments=[];B.comments.push(c);
+if(!CM[cid])CM[cid]=[];CM[cid].push(c);inp.value='';rC()}
+
+function ss(s){B.metadata.status=s;rH();alert(`Status: ${s}. Export to save.`)}
+function ec(){const b=new Blob([JSON.stringify(B.comments||[],null,2)],{type:'application/json'});dl(b,`comments-${B.metadata.branch_name}.json`)}
+function eb(){const b=new Blob([JSON.stringify(B,null,2)],{type:'application/json'});dl(b,`bundle-${B.metadata.branch_name}.json`)}
+function dl(b,n){const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=n;a.click();URL.revokeObjectURL(u)}
+</script>
+</body>
+</html>
