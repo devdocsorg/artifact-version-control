@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Artifact Diff Viewer v2</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--bdr:#30363d;--txt:#e6edf3;--muted:#8b949e;--dim:#484f58;
+--grn:#3fb950;--grn-bg:rgba(63,185,80,.12);--grn-bdr:rgba(63,185,80,.4);
+--red:#f85149;--red-bg:rgba(248,81,73,.12);--red-bdr:rgba(248,81,73,.4);
+--blu:#58a6ff;--blu-bg:rgba(88,166,255,.12);--blu-bdr:rgba(88,166,255,.4);
+--yel:#d29922;--yel-bg:rgba(210,153,34,.12);
+--pur:#bc8cff;--r:8px;--mono:'SF Mono','Fira Code','Cascadia Code',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--txt);line-height:1.6}
+
+/* ── Top bar ── */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:10px 24px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100}
+.topbar h1{font-size:15px;font-weight:600;white-space:nowrap;cursor:pointer}
+.topbar h1:hover{color:var(--blu)}
+.badge{padding:2px 10px;border-radius:12px;font-size:11px;font-family:var(--mono)}
+.badge-branch{background:var(--blu-bg);color:var(--blu)}
+.badge-status{font-weight:600;text-transform:uppercase}
+.s-active{background:var(--yel-bg);color:var(--yel)}.s-merged{background:var(--grn-bg);color:var(--grn)}.s-canceled{background:var(--red-bg);color:var(--red)}
+.topbar-stats{font-size:12px;color:var(--dim);display:flex;gap:10px;margin-left:auto}
+.stat-g{color:var(--grn)}.stat-r{color:var(--red)}
+
+/* ── File nav ── */
+.file-nav{background:var(--bg3);border-bottom:1px solid var(--bdr);padding:8px 24px;display:flex;align-items:center;gap:10px;position:sticky;top:44px;z-index:99}
+.nav-btn{background:var(--bg2);border:1px solid var(--bdr);color:var(--muted);padding:5px 14px;border-radius:var(--r);cursor:pointer;font-size:13px;transition:all .15s}
+.nav-btn:hover:not(:disabled){background:var(--bg);color:var(--txt);border-color:var(--blu)}
+.nav-btn:disabled{opacity:.25;cursor:not-allowed}
+.file-select{background:var(--bg2);border:1px solid var(--bdr);color:var(--txt);padding:5px 12px;border-radius:var(--r);font-family:var(--mono);font-size:13px;cursor:pointer}
+.file-select:focus{outline:none;border-color:var(--blu)}
+.file-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.3px}
+.file-badge.modified{background:var(--yel-bg);color:var(--yel)}.file-badge.added{background:var(--grn-bg);color:var(--grn)}
+.file-badge.removed{background:var(--red-bg);color:var(--red)}
+.file-counter{font-size:12px;color:var(--dim)}
+.review-toggle{display:flex;align-items:center;gap:6px;margin-left:auto;cursor:pointer;padding:5px 12px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--bg2);font-size:13px;color:var(--muted);transition:all .15s;user-select:none}
+.review-toggle:hover{border-color:var(--grn-bdr);color:var(--grn)}
+.review-toggle.done{background:var(--grn-bg);border-color:var(--grn-bdr);color:var(--grn)}
+.review-toggle .check{font-size:14px}
+
+/* ── Tab bar ── */
+.tab-bar{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:0 24px;display:flex;align-items:stretch;gap:0;position:sticky;top:88px;z-index:98}
+.tab{padding:10px 18px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;user-select:none;display:flex;align-items:center;gap:7px;position:relative;white-space:nowrap}
+.tab:hover{color:var(--txt);background:rgba(255,255,255,.03)}
+.tab.active{color:var(--blu);border-bottom-color:var(--blu)}
+.tab .visited-dot{width:5px;height:5px;border-radius:50%;background:var(--grn);position:absolute;top:6px;right:6px;opacity:0;transition:opacity .2s}
+.tab .visited-dot.show{opacity:1}
+.tab-desc{font-size:11px;color:var(--dim);font-weight:400;margin-left:2px}
+.tab-shortcut{font-size:10px;color:var(--dim);background:var(--bg3);padding:1px 5px;border-radius:3px;margin-left:4px;font-family:var(--mono)}
+
+/* ── Progress ── */
+.progress-strip{height:3px;background:var(--bg3);position:sticky;top:130px;z-index:97}
+.progress-fill{height:100%;background:var(--grn);transition:width .4s ease;border-radius:0 2px 2px 0}
+
+/* ── Content ── */
+.content{min-height:calc(100vh - 140px);overflow-y:auto}
+
+/* ── Overview ── */
+.overview{max-width:720px;margin:0 auto;padding:48px 24px}
+.overview h2{font-size:24px;margin-bottom:16px}
+.ov-desc{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:16px 20px;margin-bottom:28px;font-size:14px;line-height:1.8;color:var(--muted)}
+.ov-stats{font-size:14px;color:var(--muted);margin-bottom:16px}
+.ov-stats .stat-g{color:var(--grn)}.ov-stats .stat-r{color:var(--red)}
+.ov-files{display:flex;flex-direction:column;gap:8px;margin-bottom:32px}
+.ov-file{display:flex;align-items:center;gap:12px;padding:14px 18px;border:1px solid var(--bdr);border-radius:var(--r);cursor:pointer;transition:all .15s;background:var(--bg2)}
+.ov-file:hover{background:var(--bg3);border-color:var(--blu)}
+.ov-file .name{font-family:var(--mono);font-size:14px;flex:1}
+.ov-file .desc{font-size:12px;color:var(--dim)}
+.ov-file .arrow{color:var(--dim);font-size:16px}
+.ov-file .reviewed-mark{color:var(--grn);font-size:14px;margin-left:8px}
+.start-btn{display:inline-flex;align-items:center;gap:8px;background:var(--blu);color:#fff;border:none;padding:12px 28px;border-radius:var(--r);font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.start-btn:hover{opacity:.9}
+
+/* ── Diff ── */
+.diff-block{font-family:var(--mono);font-size:13px;line-height:1.7;overflow-x:auto}
+.diff-line{display:flex;min-height:24px}
+.diff-ln{width:55px;text-align:right;padding:0 10px;color:var(--dim);user-select:none;flex-shrink:0;font-size:12px;border-right:1px solid var(--bdr)}
+.diff-ln-old{border-right:none}
+.diff-marker{width:28px;text-align:center;flex-shrink:0;font-weight:700;user-select:none}
+.diff-text{padding:0 16px;white-space:pre;flex:1}
+.diff-add{background:var(--grn-bg)}.diff-add .diff-marker{color:var(--grn)}
+.diff-del{background:var(--red-bg)}.diff-del .diff-marker{color:var(--red)}
+.diff-hunk{background:var(--blu-bg);color:var(--blu);padding:6px 16px;font-size:12px;font-weight:600;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+.diff-fold{padding:8px 16px;font-size:12px;color:var(--dim);background:rgba(255,255,255,.015);cursor:pointer;text-align:center;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+.diff-fold:hover{background:var(--bg3);color:var(--muted)}
+
+/* ── Source ── */
+.source-view{font-family:var(--mono);font-size:13px;line-height:1.7;overflow-x:auto}
+.source-line{display:flex;min-height:24px}
+.source-ln{width:55px;text-align:right;padding:0 10px;color:var(--dim);user-select:none;flex-shrink:0;font-size:12px;border-right:1px solid var(--bdr)}
+.source-text{padding:0 16px;white-space:pre;flex:1}
+.source-hl{background:var(--grn-bg);border-left:3px solid var(--grn)}
+.source-hl .source-ln{color:var(--grn)}
+
+/* ── Preview (rendered markdown) ── */
+.preview-pane{padding:36px 52px;max-width:880px;margin:0 auto}
+.preview-pane h1{font-size:32px;margin:28px 0 14px;padding-bottom:10px;border-bottom:1px solid var(--bdr);font-weight:600}
+.preview-pane h2{font-size:24px;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--bdr)}
+.preview-pane h3{font-size:18px;margin:20px 0 8px}.preview-pane h4{font-size:15px;margin:16px 0 6px}
+.preview-pane p{margin:10px 0;line-height:1.8}
+.preview-pane a{color:var(--blu);text-decoration:none}.preview-pane a:hover{text-decoration:underline}
+.preview-pane code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:13px}
+.preview-pane pre{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin:16px 0;overflow-x:auto}
+.preview-pane pre code{background:none;padding:0;font-size:13px;line-height:1.6}
+.preview-pane table{border-collapse:collapse;width:100%;margin:16px 0}
+.preview-pane th,.preview-pane td{border:1px solid var(--bdr);padding:10px 14px;text-align:left;font-size:13px}
+.preview-pane th{background:var(--bg3);font-weight:600}
+.preview-pane tr:nth-child(even){background:rgba(255,255,255,.02)}
+.preview-pane ul,.preview-pane ol{margin:10px 0;padding-left:28px}
+.preview-pane li{margin:5px 0;line-height:1.7}
+.preview-pane blockquote{border-left:3px solid var(--blu);padding:10px 20px;margin:16px 0;color:var(--muted);background:rgba(88,166,255,.04)}
+.preview-pane hr{border:none;border-top:1px solid var(--bdr);margin:24px 0}
+.preview-pane strong{color:#fff}
+
+/* ── Truncation marker ── */
+.trunc-marker{background:var(--yel-bg);border:1px dashed rgba(210,153,34,.4);border-radius:var(--r);padding:10px 16px;margin:12px 0;text-align:center;color:var(--yel);font-size:13px;font-style:italic}
+.trunc-marker-inline{background:var(--yel-bg);color:var(--yel);padding:2px 8px;border-radius:4px;font-size:12px;font-style:italic;display:inline-block;margin:2px 0}
+
+/* ── Split compare ── */
+.split-container{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 140px)}
+.split-pane{overflow:auto;border-right:1px solid var(--bdr)}
+.split-pane:last-child{border-right:none}
+.split-label{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:5}
+.split-label-old{background:var(--red-bg);color:var(--red)}
+.split-label-new{background:var(--grn-bg);color:var(--grn)}
+
+/* ── Notes panel ── */
+.notes-toggle{position:fixed;bottom:16px;right:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:8px 14px;font-size:13px;color:var(--muted);cursor:pointer;z-index:200;transition:all .15s;display:flex;align-items:center;gap:6px}
+.notes-toggle:hover{border-color:var(--blu);color:var(--blu)}
+.notes-toggle.has-notes{border-color:var(--yel);color:var(--yel)}
+.notes-panel{position:fixed;bottom:56px;right:16px;width:360px;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);z-index:200;display:none;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.notes-panel.open{display:block}
+.notes-panel-header{padding:10px 14px;border-bottom:1px solid var(--bdr);font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;justify-content:space-between}
+.notes-close{cursor:pointer;color:var(--dim);font-size:16px}.notes-close:hover{color:var(--txt)}
+.notes-input{width:100%;background:var(--bg);border:none;padding:12px 14px;color:var(--txt);font-size:13px;font-family:inherit;resize:none;height:120px}
+.notes-input:focus{outline:none}
+
+/* ── Loading ── */
+.load{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:20px}
+.load h2{font-size:28px;font-weight:600}.load p{color:var(--muted);font-size:14px}
+.load .subtitle{color:var(--dim);font-size:12px;max-width:400px;text-align:center;line-height:1.6}
+.drop{border:2px dashed var(--bdr);border-radius:16px;padding:60px;text-align:center;cursor:pointer;transition:all .2s;max-width:480px;width:100%}
+.drop:hover,.drop.active{border-color:var(--blu);background:rgba(88,166,255,.03)}
+
+/* ── Empty state ── */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px;color:var(--dim);font-size:15px;gap:12px}
+
+/* ── Keyboard shortcuts overlay ── */
+.kbd-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center}
+.kbd-overlay.open{display:flex}
+.kbd-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:28px 36px;max-width:460px;width:100%}
+.kbd-box h3{font-size:16px;margin-bottom:16px}
+.kbd-row{display:flex;align-items:center;gap:12px;padding:6px 0;font-size:13px;color:var(--muted)}
+.kbd-row kbd{background:var(--bg3);padding:3px 8px;border-radius:4px;font-family:var(--mono);font-size:11px;border:1px solid var(--bdr);color:var(--txt);min-width:24px;text-align:center}
+.kbd-row span{flex:1}
+.kbd-close{margin-top:16px;text-align:center;font-size:12px;color:var(--dim)}
+
+/* ── Review Plan ── */
+.plan-header{padding:24px 32px 16px;max-width:820px;margin:0 auto}
+.plan-summary{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:16px 20px;margin-bottom:20px;font-size:14px;line-height:1.8;color:var(--muted)}
+.plan-meta{display:flex;gap:16px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
+.plan-risk{padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600;text-transform:uppercase}
+.plan-risk.low{background:var(--grn-bg);color:var(--grn)}.plan-risk.medium{background:var(--yel-bg);color:var(--yel)}.plan-risk.high{background:var(--red-bg);color:var(--red)}
+.plan-time{font-size:13px;color:var(--dim)}
+.plan-progress-text{font-size:13px;color:var(--muted);margin-left:auto}
+
+/* Role selector */
+.role-selector{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.role-btn{padding:8px 16px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--bg2);color:var(--muted);cursor:pointer;font-size:13px;transition:all .15s;display:flex;align-items:center;gap:6px}
+.role-btn:hover{border-color:var(--blu);color:var(--txt)}
+.role-btn.active{background:var(--blu-bg);border-color:var(--blu-bdr);color:var(--blu)}
+.role-btn .role-icon{font-size:15px}
+.role-btn .role-count{background:var(--bg3);padding:1px 6px;border-radius:8px;font-size:11px}
+
+/* Category groups */
+.plan-category{margin-bottom:28px}
+.plan-cat-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bdr)}
+.plan-cat-header .cat-icon{font-size:16px}
+.plan-cat-header .cat-name{font-size:15px;font-weight:600}
+.plan-cat-header .cat-desc{font-size:12px;color:var(--dim);margin-left:8px}
+.plan-cat-header .cat-count{margin-left:auto;font-size:12px;color:var(--dim)}
+
+/* Check items */
+.check-item{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:10px;overflow:hidden;transition:border-color .15s}
+.check-item:hover{border-color:rgba(88,166,255,.3)}
+.check-item.passed{border-color:var(--grn-bdr);background:rgba(63,185,80,.04)}
+.check-item.failed{border-color:var(--red-bdr);background:rgba(248,81,73,.04)}
+.check-top{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;cursor:pointer}
+.check-severity{width:4px;min-height:40px;border-radius:2px;flex-shrink:0;margin-top:2px}
+.check-severity.critical{background:var(--red)}.check-severity.high{background:var(--yel)}.check-severity.medium{background:var(--blu)}.check-severity.low{background:var(--dim)}
+.check-question{flex:1;font-size:14px;line-height:1.5;font-weight:500}
+.check-badges{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.check-sev-label{font-size:10px;font-weight:600;text-transform:uppercase;padding:2px 6px;border-radius:3px}
+.check-sev-label.critical{background:var(--red-bg);color:var(--red)}.check-sev-label.high{background:var(--yel-bg);color:var(--yel)}
+.check-sev-label.medium{background:var(--blu-bg);color:var(--blu)}.check-sev-label.low{background:var(--bg3);color:var(--dim)}
+.check-status-icon{font-size:18px;cursor:pointer;transition:transform .15s}
+.check-status-icon:hover{transform:scale(1.2)}
+
+/* Check expanded details */
+.check-details{display:none;padding:0 16px 14px 32px;font-size:13px;color:var(--muted);line-height:1.7}
+.check-item.expanded .check-details{display:block}
+.check-why{margin-bottom:10px;font-style:italic;color:var(--dim)}
+.check-look-for{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:10px 14px;margin-bottom:12px}
+.check-look-for strong{color:var(--txt);font-size:12px;text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:4px}
+.check-actions{display:flex;gap:8px;flex-wrap:wrap}
+.check-go{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--r);background:var(--blu);color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.check-go:hover{opacity:.9}
+.check-go-secondary{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--r);background:var(--bg3);color:var(--muted);border:1px solid var(--bdr);font-size:12px;cursor:pointer;transition:all .15s}
+.check-go-secondary:hover{border-color:var(--blu);color:var(--txt)}
+.check-verdict{display:flex;gap:6px;margin-left:auto}
+.verdict-btn{padding:5px 12px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--bg2);color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s}
+.verdict-btn:hover{border-color:var(--txt);color:var(--txt)}
+.verdict-btn.pass{border-color:var(--grn-bdr);color:var(--grn);background:var(--grn-bg)}
+.verdict-btn.fail{border-color:var(--red-bdr);color:var(--red);background:var(--red-bg)}
+
+/* Tab for Review Plan on overview */
+.overview-tabs{display:flex;gap:0;border-bottom:1px solid var(--bdr);margin-bottom:24px}
+.ov-tab{padding:10px 20px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s}
+.ov-tab:hover{color:var(--txt)}.ov-tab.active{color:var(--blu);border-bottom-color:var(--blu)}
+.ov-tab .tab-badge{background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:6px;font-weight:700}
+</style>
+</head>
+<body>
+<div id="app">
+<!-- Loading screen -->
+<div class="load" id="loader">
+<h2>📦 Artifact Diff Viewer</h2>
+<p>Review changes to any artifact with human-readable diffs</p>
+<div class="drop" id="dropzone" onclick="document.getElementById('fileInput').click()">
+<p style="font-size:48px;margin-bottom:16px">📄</p>
+<p style="font-size:15px">Drop a diff bundle JSON here or click to browse</p>
+<p style="font-size:12px;margin-top:12px;color:var(--dim)">A diff bundle contains before/after snapshots of your files with change metadata</p>
+</div>
+<input type="file" id="fileInput" accept=".json" style="display:none"/>
+<p class="subtitle" style="margin-top:24px">Or pass <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px">?bundle=path/to/file.json</code> in the URL</p>
+</div>
+
+<!-- Main viewer -->
+<div id="viewer" style="display:none">
+<div class="topbar">
+<h1 id="prTitle" onclick="goOverview()" title="Back to overview"></h1>
+<span class="badge badge-branch" id="branchName"></span>
+<span class="badge badge-status" id="statusBadge"></span>
+<div class="topbar-stats" id="topStats"></div>
+</div>
+<div class="file-nav" id="fileNav" style="display:none">
+<button class="nav-btn" id="prevBtn" onclick="navFile(-1)">← Prev</button>
+<select class="file-select" id="fileSelect" onchange="selectFile(+this.value)"></select>
+<span id="fileBadge"></span>
+<button class="nav-btn" id="nextBtn" onclick="navFile(1)">Next →</button>
+<span class="file-counter" id="fileCounter"></span>
+<div class="review-toggle" id="reviewToggle" onclick="toggleReviewed()">
+<span class="check" id="reviewCheck">○</span>
+<span id="reviewLabel">Mark reviewed</span>
+</div>
+</div>
+<div class="tab-bar" id="tabBar" style="display:none"></div>
+<div class="progress-strip"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+<div class="content" id="content"></div>
+</div>
+
+<!-- Notes panel -->
+<div class="notes-toggle" id="notesToggle" onclick="toggleNotes()" style="display:none">📝 Notes</div>
+<div class="notes-panel" id="notesPanel">
+<div class="notes-panel-header">
+<span>Notes for <span id="notesFileName"></span></span>
+<span class="notes-close" onclick="toggleNotes()">✕</span>
+</div>
+<textarea class="notes-input" id="notesInput" placeholder="Add review notes, concerns, questions..." oninput="saveNote()"></textarea>
+</div>
+
+<!-- Keyboard shortcuts -->
+<div class="kbd-overlay" id="kbdOverlay" onclick="if(event.target===this)toggleKbd()">
+<div class="kbd-box">
+<h3>⌨️ Keyboard Shortcuts</h3>
+<div class="kbd-row"><kbd>←</kbd> <kbd>→</kbd> <span>Navigate between files</span></div>
+<div class="kbd-row"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> <span>Switch view tabs</span></div>
+<div class="kbd-row"><kbd>R</kbd> <span>Toggle file as reviewed</span></div>
+<div class="kbd-row"><kbd>N</kbd> <span>Toggle notes panel</span></div>
+<div class="kbd-row"><kbd>O</kbd> <span>Back to overview</span></div>
+<div class="kbd-row"><kbd>?</kbd> <span>Show/hide this help</span></div>
+<div class="kbd-close">Press <kbd>?</kbd> or <kbd>Esc</kbd> to close</div>
+</div>
+</div>
+</div>
+
+<script>
+let BUNDLE = null;
+let currentFileIdx = -1; // -1 = overview
+let currentTab = '';
+let changedFiles = []; // indices of non-unchanged files
+let reviewState = {}; // { fileName: { reviewed: false, notes: '', visitedTabs: {} } }
+
+// ── Tab configs per file status ──
+const TAB_CONFIGS = {
+  modified: [
+    { id: 'diff', label: 'Changes', icon: '📝', key: '1' },
+    { id: 'source', label: 'Read Through', icon: '📖', key: '2' },
+    { id: 'preview', label: 'How It Looks', icon: '👁', key: '3' },
+    { id: 'compare', label: 'Before / After', icon: '⟺', key: '4' },
+  ],
+  added: [
+    { id: 'diff', label: "What's New", icon: '✨', key: '1' },
+    { id: 'source', label: 'Read Through', icon: '📖', key: '2' },
+    { id: 'preview', label: 'How It Looks', icon: '👁', key: '3' },
+  ],
+  removed: [
+    { id: 'diff', label: 'What Was Removed', icon: '🗑️', key: '1' },
+    { id: 'old-source', label: 'Full Document', icon: '📄', key: '2' },
+    { id: 'old-preview', label: 'How It Looked', icon: '👁', key: '3' },
+  ],
+};
+
+// ── Loading ──
+const params = new URLSearchParams(location.search);
+const bundlePath = params.get('bundle');
+if (bundlePath) fetch(bundlePath).then(r => r.json()).then(load).catch(console.error);
+
+document.getElementById('fileInput').onchange = e => {
+  const f = e.target.files[0];
+  if (f) { const r = new FileReader(); r.onload = ev => load(JSON.parse(ev.target.result)); r.readAsText(f); }
+};
+const dz = document.getElementById('dropzone');
+dz.ondragover = e => { e.preventDefault(); dz.classList.add('active'); };
+dz.ondragleave = () => dz.classList.remove('active');
+dz.ondrop = e => { e.preventDefault(); dz.classList.remove('active'); const f = e.dataTransfer.files[0]; if (f) { const r = new FileReader(); r.onload = ev => load(JSON.parse(ev.target.result)); r.readAsText(f); } };
+
+// ── Keyboard ──
+document.addEventListener('keydown', e => {
+  if (!BUNDLE) return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+  if (e.key === '?') { toggleKbd(); return; }
+  if (e.key === 'Escape') { document.getElementById('kbdOverlay').classList.remove('open'); return; }
+  if (e.key === 'ArrowLeft') navFile(-1);
+  else if (e.key === 'ArrowRight') navFile(1);
+  else if (e.key === 'r' || e.key === 'R') toggleReviewed();
+  else if (e.key === 'n' || e.key === 'N') toggleNotes();
+  else if (e.key === 'o' || e.key === 'O') goOverview();
+  else if (e.key >= '1' && e.key <= '9') {
+    const tabs = getTabsForCurrentFile();
+    const idx = parseInt(e.key) - 1;
+    if (tabs && idx < tabs.length) switchTab(tabs[idx].id);
+  }
+});
+
+function toggleKbd() { document.getElementById('kbdOverlay').classList.toggle('open'); }
+
+// ── Truncation handling ──
+// Use emoji markers that survive markdown parsing (even inside code blocks)
+const TRUNC_RE = /\.\.\.\s*\((\d+)\s+more\)\s*\.\.\./g;
+
+function cleanTruncation(text) {
+  // Replace with emoji-wrapped markers that won't get mangled by markdown parser
+  return text.replace(TRUNC_RE, '\n\n🔸TRUNC:$1🔸\n\n');
+}
+
+function renderTruncInPreview(html) {
+  // Replace markers wherever they ended up (inside or outside code blocks)
+  return html.replace(/🔸TRUNC:(\d+)🔸/g,
+    '<div class="trunc-marker">⋯ $1 lines not included in diff bundle</div>');
+}
+
+function renderTruncInSource(text) {
+  return text.replace(TRUNC_RE, '⋯ $1 lines not included in diff bundle ⋯');
+}
+
+// ── File reconstruction ──
+function getFileChanges(fn) { return BUNDLE.changes.filter(c => c.file === fn); }
+
+function reconstructFile(fn, version = 'new') {
+  const changes = getFileChanges(fn), parts = [];
+  for (const ch of changes) {
+    if (ch.type === 'unchanged') parts.push(ch.content?.content || '');
+    else if (ch.type === 'added') { if (version === 'new') parts.push(ch.content?.content || ''); }
+    else if (ch.type === 'removed') { if (version === 'old') parts.push(ch.removed_content?.content || ''); }
+    else if (ch.type === 'modified') parts.push(version === 'new' ? (ch.after?.content || '') : (ch.before?.content || ''));
+  }
+  return parts.join('\n');
+}
+
+function getHighlightRanges(fn) {
+  const changes = getFileChanges(fn), ranges = [];
+  let ln = 1;
+  for (const ch of changes) {
+    let content = '', hl = false;
+    if (ch.type === 'unchanged') content = ch.content?.content || '';
+    else if (ch.type === 'added') { content = ch.content?.content || ''; hl = true; }
+    else if (ch.type === 'removed') continue;
+    else if (ch.type === 'modified') { content = ch.after?.content || ''; hl = true; }
+    const lines = content.split('\n');
+    if (hl) ranges.push({ s: ln, e: ln + lines.length - 1 });
+    ln += lines.length;
+  }
+  return ranges;
+}
+
+// ── Diff building ──
+function buildDiffLines(fn) {
+  const changes = getFileChanges(fn), lines = [];
+  let oln = 1, nln = 1;
+  for (const ch of changes) {
+    if (ch.type === 'unchanged') {
+      const tl = (ch.content?.content || '').split('\n');
+      if (ch.collapsed && tl.length > 8) {
+        for (let i = 0; i < 3; i++) lines.push({ type: 'ctx', old: oln + i, new: nln + i, text: tl[i] });
+        lines.push({ type: 'fold', count: tl.length - 6, lines: tl.slice(3, tl.length - 3), oldStart: oln + 3, newStart: nln + 3 });
+        for (let i = tl.length - 3; i < tl.length; i++) lines.push({ type: 'ctx', old: oln + i, new: nln + i, text: tl[i] });
+      } else { tl.forEach((t, i) => lines.push({ type: 'ctx', old: oln + i, new: nln + i, text: t })); }
+      oln += tl.length; nln += tl.length;
+    } else if (ch.type === 'added') {
+      lines.push({ type: 'hunk', text: `${ch.description || 'Added'} — ${ch.location || ''}` });
+      (ch.content?.content || '').split('\n').forEach(t => lines.push({ type: 'add', new: nln++, text: t }));
+    } else if (ch.type === 'removed') {
+      lines.push({ type: 'hunk', text: `${ch.description || 'Removed'} — ${ch.location || ''}` });
+      (ch.removed_content?.content || '').split('\n').forEach(t => lines.push({ type: 'del', old: oln++, text: t }));
+    } else if (ch.type === 'modified') {
+      lines.push({ type: 'hunk', text: `${ch.description || 'Modified'} — ${ch.location || ''}` });
+      (ch.before?.content || '').split('\n').forEach(t => lines.push({ type: 'del', old: oln++, text: t }));
+      (ch.after?.content || '').split('\n').forEach(t => lines.push({ type: 'add', new: nln++, text: t }));
+    }
+  }
+  return lines;
+}
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── Renderers ──
+function renderDiff(fn) {
+  const lines = buildDiffLines(fn);
+  let html = '<div class="diff-block">';
+  for (const l of lines) {
+    if (l.type === 'hunk') html += `<div class="diff-hunk">@@ ${esc(l.text)} @@</div>`;
+    else if (l.type === 'fold') {
+      const id = 'fold-' + Math.random().toString(36).slice(2, 8);
+      html += `<div class="diff-fold" id="${id}" onclick="expandFold(this, '${id}-lines')">⋯ ${l.count} unchanged lines (click to expand)</div>`;
+      html += `<div id="${id}-lines" style="display:none">`;
+      l.lines.forEach((t, i) => {
+        html += `<div class="diff-line"><span class="diff-ln diff-ln-old">${l.oldStart+i}</span><span class="diff-ln">${l.newStart+i}</span><span class="diff-marker"> </span><span class="diff-text">${esc(t)}</span></div>`;
+      });
+      html += '</div>';
+    } else {
+      const cls = l.type === 'add' ? 'diff-add' : l.type === 'del' ? 'diff-del' : '';
+      const m = l.type === 'add' ? '+' : l.type === 'del' ? '−' : ' ';
+      html += `<div class="diff-line ${cls}"><span class="diff-ln diff-ln-old">${l.old||''}</span><span class="diff-ln">${l.new||''}</span><span class="diff-marker">${m}</span><span class="diff-text">${esc(l.text)}</span></div>`;
+    }
+  }
+  return html + '</div>';
+}
+
+function expandFold(el, targetId) {
+  el.style.display = 'none';
+  document.getElementById(targetId).style.display = 'block';
+}
+
+function renderSource(fn, version = 'new') {
+  const src = reconstructFile(fn, version);
+  const hl = version === 'new' ? getHighlightRanges(fn) : [];
+  const lines = src.split('\n');
+  let html = '<div class="source-view">';
+  lines.forEach((text, i) => {
+    const ln = i + 1;
+    const h = hl.some(r => ln >= r.s && ln <= r.e) ? ' source-hl' : '';
+    const displayText = renderTruncInSource(text);
+    const isTrunc = displayText !== text;
+    html += `<div class="source-line${h}"><span class="source-ln">${ln}</span><span class="source-text">${isTrunc ? `<span class="trunc-marker-inline">${esc(displayText)}</span>` : esc(text)}</span></div>`;
+  });
+  return html + '</div>';
+}
+
+function renderPreview(fn, version = 'new') {
+  const src = reconstructFile(fn, version);
+  if (!src.trim()) return '<div class="empty-state"><span style="font-size:40px">📭</span>No content to preview</div>';
+  const cleaned = cleanTruncation(src);
+  const html = marked.parse(cleaned);
+  const final = renderTruncInPreview(html);
+  return `<div class="preview-pane">${final}</div>`;
+}
+
+function renderSplitPreview(fn) {
+  return `<div class="split-container">
+    <div class="split-pane"><div class="split-label split-label-old">⬅ Before</div>${renderPreview(fn, 'old')}</div>
+    <div class="split-pane"><div class="split-label split-label-new">After ➡</div>${renderPreview(fn, 'new')}</div>
+  </div>`;
+}
+
+// renderOverview is now handled by renderOverviewWithPlan()
+
+// ── Tab management ──
+function getTabsForCurrentFile() {
+  if (currentFileIdx < 0) return null;
+  const f = BUNDLE.summary.files[currentFileIdx];
+  return TAB_CONFIGS[f.status] || TAB_CONFIGS.modified;
+}
+
+function renderTabBar() {
+  const tabBar = document.getElementById('tabBar');
+  const tabs = getTabsForCurrentFile();
+  if (!tabs) { tabBar.style.display = 'none'; return; }
+  tabBar.style.display = 'flex';
+  
+  const fn = BUNDLE.summary.files[currentFileIdx].path;
+  const visited = reviewState[fn]?.visitedTabs || {};
+  
+  tabBar.innerHTML = '';
+  tabs.forEach(t => {
+    const isActive = t.id === currentTab;
+    const isVisited = visited[t.id];
+    const el = document.createElement('div');
+    el.className = `tab${isActive ? ' active' : ''}`;
+    el.innerHTML = `${t.icon} ${t.label}<span class="tab-shortcut">${t.key}</span><span class="visited-dot${isVisited && !isActive ? ' show' : ''}"></span>`;
+    el.onclick = () => switchTab(t.id);
+    el.title = `${t.label} (press ${t.key})`;
+    tabBar.appendChild(el);
+  });
+}
+
+function switchTab(tabId) {
+  currentTab = tabId;
+  
+  // Mark as visited
+  if (currentFileIdx >= 0) {
+    const fn = BUNDLE.summary.files[currentFileIdx].path;
+    if (reviewState[fn]) {
+      if (!reviewState[fn].visitedTabs) reviewState[fn].visitedTabs = {};
+      reviewState[fn].visitedTabs[tabId] = true;
+    }
+  }
+  
+  renderTabBar();
+  renderContent();
+}
+
+function renderContent() {
+  const content = document.getElementById('content');
+  if (currentFileIdx < 0) {
+    content.innerHTML = renderOverviewWithPlan();
+    return;
+  }
+  
+  const fn = BUNDLE.summary.files[currentFileIdx].path;
+  
+  switch (currentTab) {
+    case 'diff': content.innerHTML = renderDiff(fn); break;
+    case 'source': content.innerHTML = renderSource(fn, 'new'); break;
+    case 'preview': content.innerHTML = renderPreview(fn, 'new'); break;
+    case 'compare': content.innerHTML = renderSplitPreview(fn); break;
+    case 'old-source': content.innerHTML = renderSource(fn, 'old'); break;
+    case 'old-preview': content.innerHTML = renderPreview(fn, 'old'); break;
+    default: content.innerHTML = renderDiff(fn);
+  }
+  content.scrollTop = 0;
+}
+
+// ── Navigation ──
+function goOverview() {
+  currentFileIdx = -1;
+  document.getElementById('fileNav').style.display = 'none';
+  document.getElementById('tabBar').style.display = 'none';
+  document.getElementById('notesToggle').style.display = 'none';
+  document.getElementById('notesPanel').classList.remove('open');
+  const sel = document.getElementById('fileSelect');
+  sel.value = -1;
+  renderContent();
+}
+
+function selectFile(idx) {
+  idx = parseInt(idx);
+  const f = BUNDLE.summary.files[idx];
+  if (!f || f.status === 'unchanged') return;
+  
+  currentFileIdx = idx;
+  document.getElementById('fileNav').style.display = 'flex';
+  document.getElementById('notesToggle').style.display = 'flex';
+  
+  // Update file select
+  document.getElementById('fileSelect').value = idx;
+  
+  // Update badge
+  document.getElementById('fileBadge').innerHTML = `<span class="file-badge ${f.status}">${f.status}</span>`;
+  
+  // Update counter
+  const posInChanged = changedFiles.indexOf(idx);
+  document.getElementById('fileCounter').textContent = `${posInChanged + 1} / ${changedFiles.length}`;
+  
+  // Update nav buttons (only navigate between changed files)
+  document.getElementById('prevBtn').disabled = posInChanged <= 0;
+  document.getElementById('nextBtn').disabled = posInChanged >= changedFiles.length - 1;
+  
+  // Update review toggle
+  updateReviewToggle();
+  
+  // Set appropriate first tab
+  const tabs = getTabsForCurrentFile();
+  if (tabs && !tabs.find(t => t.id === currentTab)) {
+    currentTab = tabs[0].id;
+  }
+  
+  // Mark first tab as visited
+  const fn = f.path;
+  if (reviewState[fn]) {
+    if (!reviewState[fn].visitedTabs) reviewState[fn].visitedTabs = {};
+    reviewState[fn].visitedTabs[currentTab] = true;
+  }
+  
+  // Update notes
+  document.getElementById('notesFileName').textContent = fn;
+  document.getElementById('notesInput').value = reviewState[fn]?.notes || '';
+  updateNotesToggle();
+  
+  renderTabBar();
+  renderContent();
+}
+
+function navFile(dir) {
+  const posInChanged = changedFiles.indexOf(currentFileIdx);
+  const next = posInChanged + dir;
+  if (next < 0 || next >= changedFiles.length) return;
+  selectFile(changedFiles[next]);
+}
+
+// ── Review state ──
+function toggleReviewed() {
+  if (currentFileIdx < 0) return;
+  const fn = BUNDLE.summary.files[currentFileIdx].path;
+  if (reviewState[fn]) {
+    reviewState[fn].reviewed = !reviewState[fn].reviewed;
+    updateReviewToggle();
+    updateProgress();
+  }
+}
+
+function updateReviewToggle() {
+  if (currentFileIdx < 0) return;
+  const fn = BUNDLE.summary.files[currentFileIdx].path;
+  const reviewed = reviewState[fn]?.reviewed || false;
+  const toggle = document.getElementById('reviewToggle');
+  toggle.classList.toggle('done', reviewed);
+  document.getElementById('reviewCheck').textContent = reviewed ? '✓' : '○';
+  document.getElementById('reviewLabel').textContent = reviewed ? 'Reviewed' : 'Mark reviewed';
+}
+
+function updateProgress() {
+  const total = changedFiles.length;
+  const reviewed = changedFiles.filter(i => reviewState[BUNDLE.summary.files[i].path]?.reviewed).length;
+  const pct = total > 0 ? Math.round((reviewed / total) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+// ── Notes ──
+function toggleNotes() {
+  const panel = document.getElementById('notesPanel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    document.getElementById('notesInput').focus();
+  }
+}
+
+function saveNote() {
+  if (currentFileIdx < 0) return;
+  const fn = BUNDLE.summary.files[currentFileIdx].path;
+  if (reviewState[fn]) {
+    reviewState[fn].notes = document.getElementById('notesInput').value;
+    updateNotesToggle();
+  }
+}
+
+function updateNotesToggle() {
+  if (currentFileIdx < 0) return;
+  const fn = BUNDLE.summary.files[currentFileIdx].path;
+  const hasNotes = (reviewState[fn]?.notes || '').trim().length > 0;
+  const toggle = document.getElementById('notesToggle');
+  toggle.classList.toggle('has-notes', hasNotes);
+  toggle.textContent = hasNotes ? '📝 Notes ●' : '📝 Notes';
+}
+
+// ── Review Plan ──
+let PLAN = null;
+let activeRole = 'all';
+let checkStates = {}; // { checkId: 'pass'|'fail'|null }
+let overviewTab = 'files'; // 'files' or 'plan'
+
+function loadPlan(plan) {
+  PLAN = plan;
+  plan.checks.forEach(c => { checkStates[c.id] = null; });
+}
+
+function getFilteredChecks() {
+  if (!PLAN) return [];
+  if (activeRole === 'all') return PLAN.checks;
+  return PLAN.checks.filter(c => c.roles.includes(activeRole));
+}
+
+function setRole(role) {
+  activeRole = role;
+  if (currentFileIdx === -1) renderContent();
+}
+
+function toggleCheckExpand(checkId) {
+  const el = document.querySelector(`[data-check="${checkId}"]`);
+  if (el) el.classList.toggle('expanded');
+}
+
+function setCheckVerdict(checkId, verdict) {
+  checkStates[checkId] = checkStates[checkId] === verdict ? null : verdict;
+  renderContent(); // re-render to update states
+}
+
+function goToCheck(file, view) {
+  // Find the file index
+  const idx = BUNDLE.summary.files.findIndex(f => f.path === file);
+  if (idx < 0) return;
+  selectFile(idx);
+  if (view) switchTab(view);
+}
+
+function renderReviewPlan() {
+  const checks = getFilteredChecks();
+  const passed = checks.filter(c => checkStates[c.id] === 'pass').length;
+  const failed = checks.filter(c => checkStates[c.id] === 'fail').length;
+  const total = checks.length;
+  
+  let html = '<div class="plan-header">';
+  
+  // Summary
+  html += `<div class="plan-summary">${esc(PLAN.summary)}</div>`;
+  
+  // Meta bar
+  html += `<div class="plan-meta">`;
+  html += `<span class="plan-risk ${PLAN.risk_level}">${PLAN.risk_level} risk</span>`;
+  html += `<span class="plan-time">⏱ ~${PLAN.estimated_review_time}</span>`;
+  html += `<span class="plan-progress-text">${passed}/${total} passed${failed > 0 ? ` · <span style="color:var(--red)">${failed} failed</span>` : ''}</span>`;
+  html += `</div>`;
+  
+  // Role selector
+  html += `<div class="role-selector">`;
+  const allCount = PLAN.checks.length;
+  html += `<button class="role-btn${activeRole === 'all' ? ' active' : ''}" onclick="setRole('all')"><span class="role-icon">👤</span>All Checks<span class="role-count">${allCount}</span></button>`;
+  PLAN.roles.forEach(r => {
+    const count = PLAN.checks.filter(c => c.roles.includes(r.id)).length;
+    html += `<button class="role-btn${activeRole === r.id ? ' active' : ''}" onclick="setRole('${r.id}')" title="${esc(r.desc)}"><span class="role-icon">${r.icon}</span>${r.name}<span class="role-count">${count}</span></button>`;
+  });
+  html += `</div>`;
+  
+  // Group by category
+  const categories = PLAN.categories || [];
+  categories.forEach(cat => {
+    const catChecks = checks.filter(c => c.category === cat.id);
+    if (catChecks.length === 0) return;
+    
+    const catPassed = catChecks.filter(c => checkStates[c.id] === 'pass').length;
+    
+    html += `<div class="plan-category">`;
+    html += `<div class="plan-cat-header">
+      <span class="cat-icon">${cat.icon}</span>
+      <span class="cat-name">${cat.name}</span>
+      <span class="cat-desc">${cat.desc || ''}</span>
+      <span class="cat-count">${catPassed}/${catChecks.length}</span>
+    </div>`;
+    
+    catChecks.forEach(check => {
+      const state = checkStates[check.id];
+      const stateClass = state === 'pass' ? ' passed' : state === 'fail' ? ' failed' : '';
+      const statusIcon = state === 'pass' ? '✅' : state === 'fail' ? '❌' : '⬜';
+      
+      html += `<div class="check-item${stateClass}" data-check="${check.id}">`;
+      html += `<div class="check-top" onclick="toggleCheckExpand('${check.id}')">`;
+      html += `<div class="check-severity ${check.severity}"></div>`;
+      html += `<div class="check-question">${esc(check.question)}</div>`;
+      html += `<div class="check-badges">`;
+      html += `<span class="check-sev-label ${check.severity}">${check.severity}</span>`;
+      html += `<span class="check-status-icon" onclick="event.stopPropagation();setCheckVerdict('${check.id}','pass')" title="Mark as pass">${statusIcon}</span>`;
+      html += `</div></div>`;
+      
+      // Expanded details
+      html += `<div class="check-details">`;
+      if (check.why) html += `<div class="check-why">${esc(check.why)}</div>`;
+      if (check.look_for) {
+        html += `<div class="check-look-for"><strong>What to look for:</strong>${esc(check.look_for)}</div>`;
+      }
+      html += `<div class="check-actions">`;
+      html += `<button class="check-go" onclick="goToCheck('${check.file}','${check.view}')">👁 View: ${check.file} → ${check.view}</button>`;
+      if (check.also_check) {
+        check.also_check.forEach(ac => {
+          html += `<button class="check-go-secondary" onclick="goToCheck('${ac.file}','${ac.view}')">${ac.label || ac.file}</button>`;
+        });
+      }
+      html += `<div class="check-verdict">`;
+      html += `<button class="verdict-btn${state === 'pass' ? ' pass' : ''}" onclick="event.stopPropagation();setCheckVerdict('${check.id}','pass')">✓ Pass</button>`;
+      html += `<button class="verdict-btn${state === 'fail' ? ' fail' : ''}" onclick="event.stopPropagation();setCheckVerdict('${check.id}','fail')">✗ Fail</button>`;
+      html += `</div></div>`;
+      
+      html += `</div></div>`;
+    });
+    
+    html += `</div>`;
+  });
+  
+  html += '</div>';
+  return html;
+}
+
+function renderOverviewWithPlan() {
+  const m = BUNDLE.metadata, s = BUNDLE.summary.stats;
+  let html = '<div style="max-width:820px;margin:0 auto;padding:32px 24px">';
+  html += `<h2 style="font-size:24px;margin-bottom:16px">${esc(m.pr_title || 'Branch: ' + m.branch_name)}</h2>`;
+  
+  // Tabs: Files | Review Plan
+  const planCheckCount = PLAN ? getFilteredChecks().filter(c => !checkStates[c.id]).length : 0;
+  html += `<div class="overview-tabs">`;
+  html += `<div class="ov-tab${overviewTab === 'files' ? ' active' : ''}" onclick="overviewTab='files';renderContent()">📁 Files</div>`;
+  if (PLAN) {
+    html += `<div class="ov-tab${overviewTab === 'plan' ? ' active' : ''}" onclick="overviewTab='plan';renderContent()">🧪 Review Plan${planCheckCount > 0 ? `<span class="tab-badge">${planCheckCount}</span>` : ''}</div>`;
+  }
+  html += `</div>`;
+  
+  if (overviewTab === 'plan' && PLAN) {
+    html += '</div>';
+    html += renderReviewPlan();
+    return html;
+  }
+  
+  // Files tab (original overview content)
+  if (m.pr_description) html += `<div class="ov-desc">${esc(m.pr_description)}</div>`;
+  const total = changedFiles.length;
+  const reviewed = changedFiles.filter(i => reviewState[BUNDLE.summary.files[i].path]?.reviewed).length;
+  html += `<div class="ov-stats">${total} file${total !== 1 ? 's' : ''} changed · <span class="stat-g">+${s.total_additions}</span> · <span class="stat-r">−${s.total_removals}</span>${reviewed > 0 ? ` · <span style="color:var(--grn)">${reviewed}/${total} reviewed</span>` : ''}</div>`;
+  html += '<div class="ov-files">';
+  changedFiles.forEach(i => {
+    const f = BUNDLE.summary.files[i];
+    const rs = reviewState[f.path];
+    html += `<div class="ov-file" onclick="selectFile(${i})"><span class="file-badge ${f.status}">${f.status}</span><span class="name">${f.path}</span><span class="desc">${f.description || ''}</span>${rs?.reviewed ? '<span class="reviewed-mark">✓</span>' : ''}<span class="arrow">→</span></div>`;
+  });
+  html += '</div>';
+  if (changedFiles.length > 0) {
+    if (reviewed === total) {
+      html += `<div style="background:var(--grn-bg);border:1px solid var(--grn-bdr);border-radius:var(--r);padding:20px;text-align:center;margin-top:8px"><div style="font-size:24px;margin-bottom:8px">✅</div><div style="font-size:16px;font-weight:600;color:var(--grn)">Review complete</div><div style="font-size:13px;color:var(--muted);margin-top:4px">All ${total} files reviewed</div></div>`;
+    } else {
+      const firstUnreviewed = changedFiles.find(i => !reviewState[BUNDLE.summary.files[i].path]?.reviewed) || changedFiles[0];
+      const label = reviewed > 0 ? 'Continue Review →' : 'Start Review →';
+      html += `<button class="start-btn" onclick="selectFile(${firstUnreviewed})">${label}</button>`;
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
+// ── Load ──
+function load(data) {
+  BUNDLE = data;
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('viewer').style.display = 'block';
+  
+  const m = BUNDLE.metadata, s = BUNDLE.summary.stats;
+  document.getElementById('prTitle').textContent = m.pr_title || `Branch: ${m.branch_name}`;
+  document.getElementById('branchName').textContent = m.branch_name;
+  const sb = document.getElementById('statusBadge');
+  sb.textContent = m.status; sb.className = `badge badge-status s-${m.status}`;
+  document.getElementById('topStats').innerHTML = `<span class="stat-g">+${s.total_additions}</span><span class="stat-r">−${s.total_removals}</span><span>${m.artifact_type}</span>`;
+  
+  // Build changed files list (skip unchanged)
+  changedFiles = [];
+  BUNDLE.summary.files.forEach((f, i) => {
+    if (f.status !== 'unchanged') changedFiles.push(i);
+  });
+  
+  // Init review state
+  changedFiles.forEach(i => {
+    const fn = BUNDLE.summary.files[i].path;
+    reviewState[fn] = { reviewed: false, notes: '', visitedTabs: {} };
+  });
+  
+  // Populate file select (only changed files)
+  const sel = document.getElementById('fileSelect');
+  sel.innerHTML = '<option value="-1">📋 Overview</option>';
+  changedFiles.forEach(i => {
+    const f = BUNDLE.summary.files[i];
+    const icon = f.status === 'added' ? '🟢' : f.status === 'removed' ? '🔴' : '🟡';
+    sel.innerHTML += `<option value="${i}">${icon} ${f.path}</option>`;
+  });
+  
+  // Load review plan if present in bundle or via URL param
+  if (data.review_plan) {
+    loadPlan(data.review_plan);
+    overviewTab = 'plan'; // Default to plan view if available
+  }
+  
+  const planPath = params.get('plan');
+  if (planPath) {
+    fetch(planPath).then(r => r.json()).then(p => {
+      if (p.review_plan) {
+        loadPlan(p.review_plan);
+        overviewTab = 'plan';
+        renderContent(); // re-render with plan
+      }
+    }).catch(console.error);
+  }
+  
+  goOverview();
+}
+</script>
+</body>
+</html>

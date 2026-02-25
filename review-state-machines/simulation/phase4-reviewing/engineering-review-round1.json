@@ -1,0 +1,43 @@
+{
+  "_comment": "GitHub PR Review — Engineering Review (Developer), Round 1: changes_requested",
+  "_checklist": "developer-guide-review.md → code-tested, explanations-comprehensive, debugging-steps-clear",
+  "_reviewer_role": "Developer (feature owner)",
+  "_doc_type_selected": "DOC_TYPE_DEVELOPER_GUIDE",
+  
+  "url": "https://api.github.com/repos/company/docs/pulls/42/reviews/1001",
+  "user": { "login": "sarah-chen", "role": "Developer / Feature Owner" },
+  "state": "CHANGES_REQUESTED",
+  "submitted_at": "2026-02-11T10:30:00Z",
+  "body": "Good coverage overall! Found a few technical issues that need fixing before I can approve.\n\n**Checklist Results:**\n- ❌ Code Tested — one syntax issue, one wrong output\n- ✅ Explanations Comprehensive — solid\n- ⚠️ Debugging Steps Clear — mostly good, one gap\n\nSee inline comments for details.",
+  
+  "comments": [
+    {
+      "_checklist_item": "code-tested → Check Syntax Validity",
+      "_verdict": "FAIL",
+      "path": "docs/guides/webhooks/setup.md",
+      "line": 82,
+      "body": "❌ **Code Tested: Syntax Error**\n\nThe Python signature verification has a bug:\n```python\nexpected = hmac.new(  # ← should be hmac.HMAC( or hmac.new(\n```\nActually wait — `hmac.new()` is valid but deprecated in Python 3.x. Should use:\n```python\nexpected = hmac.new(\n    secret.encode('utf-8'),\n    payload,\n    hashlib.sha256\n).hexdigest()\n```\nThis does work, but the `hmac.new` function was soft-deprecated. Recommend switching to `hmac.digest()` for Python 3.9+ or keeping `hmac.new` with a note about compatibility.\n\nAlso: the variable name should match — you wrote `hmac.new` but the function signature uses `hmac.HMAC` in the stdlib docs."
+    },
+    {
+      "_checklist_item": "code-tested → Check Runtime Behavior",
+      "_verdict": "FAIL",
+      "path": "docs/guides/webhooks/setup.md",
+      "line": 31,
+      "body": "❌ **Code Tested: Wrong Output**\n\nThe sample API response shows:\n```json\n\"secret\": \"whsec_k7j2m9x4p1q8...\"\n```\nBut the actual API returns the secret in a nested `credentials` object:\n```json\n\"credentials\": {\n  \"secret\": \"whsec_k7j2m9x4p1q8...\",\n  \"signing_key_id\": \"sk_live_abc\"\n}\n```\nI just tested this on staging — the flat `secret` field was the v1 API format. We changed it in v2."
+    },
+    {
+      "_checklist_item": "debugging-steps-clear → Check Resolution Paths",
+      "_verdict": "FAIL",
+      "path": "docs/guides/webhooks/setup.md",
+      "line": 198,
+      "body": "⚠️ **Debugging Steps: Missing resolution**\n\nThe 'Signature verification failing' section says to check the header name (`X-Webhook-Signature-256`), which is great. But you're missing the most common cause we see in support:\n\n**Body parsing middleware.** If the user's framework parses the JSON body before the verification step, the re-serialized body won't match. Need to add:\n\n> **Most common issue:** Make sure you verify against the raw request body bytes, not a parsed-and-re-serialized JSON object. Express, Flask, and Django all parse the body by default.\n\nWith framework-specific examples for getting the raw body."
+    },
+    {
+      "_checklist_item": "explanations-comprehensive → Check 'Why' Coverage",
+      "_verdict": "PASS",
+      "path": "docs/guides/webhooks/setup.md",
+      "line": 6,
+      "body": "✅ **Explanations: Good 'Why' Coverage**\n\nThe 'When to use webhooks' section clearly explains the motivation and tradeoffs vs polling. Nice work connecting it to rate limits as a practical reason."
+    }
+  ]
+}

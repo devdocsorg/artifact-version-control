@@ -1,0 +1,22 @@
+{
+  "key": "EPIC-100",
+  "fields": {
+    "summary": "Webhook Management Feature",
+    "description": "Users need the ability to create, manage, and monitor webhooks for real-time event notifications. This includes a UI for CRUD operations, event type selection, delivery logs, and retry configuration.",
+    "issuetype": { "name": "Epic" },
+    "status": { "name": "In Progress" },
+    "priority": { "name": "High" },
+    "assignee": { "displayName": "Sarah Chen", "emailAddress": "sarah@company.com" },
+    "reporter": { "displayName": "Marcus Webb", "emailAddress": "marcus@company.com" },
+    "labels": ["release-4.3", "webhooks", "integrations"],
+    "fixVersions": [{ "name": "4.3.0", "releaseDate": "2026-03-15" }],
+    "customfield_10100": "PRD: https://company.atlassian.net/wiki/spaces/PROD/pages/123456/Webhook+Management",
+    "issuelinks": [
+      { "type": "contains", "outwardIssue": { "key": "FEAT-101", "fields": { "summary": "Webhook CRUD API endpoints" } } },
+      { "type": "contains", "outwardIssue": { "key": "FEAT-102", "fields": { "summary": "Webhook delivery log UI" } } },
+      { "type": "contains", "outwardIssue": { "key": "DOC-201", "fields": { "summary": "Developer Guide: Webhook Setup" } } },
+      { "type": "contains", "outwardIssue": { "key": "DOC-202", "fields": { "summary": "UI Reference: Webhook Management Panel" } } },
+      { "type": "contains", "outwardIssue": { "key": "DOC-203", "fields": { "summary": "User Workflow: Setting Up Event Notifications" } } }
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "_comment": "Final state of DOC-201 after publishing — the complete lifecycle",
+  "key": "DOC-201",
+  "fields": {
+    "summary": "Developer Guide: Webhook Setup",
+    "status": { "name": "Done", "statusCategory": { "name": "Done" } },
+    "resolution": { "name": "Complete" },
+    "assignee": { "displayName": "Alex Rivera" },
+    "labels": ["docs", "developer-guide", "release-4.3", "webhooks"],
+    "fixVersions": [{ "name": "4.3.0" }]
+  },
+  "changelog": {
+    "histories": [
+      { "created": "2026-02-01T09:00:00Z", "items": [{ "field": "status", "toString": "To Do" }] },
+      { "created": "2026-02-01T09:05:00Z", "items": [{ "field": "assignee", "toString": "Alex Rivera" }] },
+      { "created": "2026-02-03T09:15:00Z", "items": [{ "field": "status", "toString": "In Progress" }] },
+      { "created": "2026-02-10T16:00:00Z", "items": [{ "field": "status", "toString": "In Review" }] },
+      { "created": "2026-02-12T10:00:00Z", "items": [{ "field": "status", "toString": "Done" }] }
+    ]
+  },
+  "_lifecycle_summary": {
+    "To Do":       "2026-02-01 → 2026-02-03  (2 days — waiting for writer availability)",
+    "In Progress": "2026-02-03 → 2026-02-10  (7 days — research + drafting)",
+    "In Review":   "2026-02-10 → 2026-02-12  (2 days — eng review round1 + fix + round2 + PM review)",
+    "Done":        "2026-02-12 → ∞",
+    "total_cycle":  "11 days"
+  }
+}

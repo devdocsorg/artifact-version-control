@@ -1,0 +1,36 @@
+{
+  "_comment": "GitHub API response — the PR object that now exists in the system",
+  "url": "https://api.github.com/repos/company/docs/pulls/42",
+  "html_url": "https://github.com/company/docs/pull/42",
+  "number": 42,
+  "state": "open",
+  "title": "docs: Webhook Setup Developer Guide",
+  "user": { "login": "alex-rivera" },
+  "body": "## Summary\n\nAdds a new developer guide for webhook setup and management.\n\n**JIRA:** [DOC-201](https://company.atlassian.net/browse/DOC-201)\n**Doc Type:** Developer Guide\n...",
+  "head": {
+    "ref": "feature/DOC-201",
+    "sha": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+  },
+  "base": {
+    "ref": "main",
+    "sha": "f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5"
+  },
+  "requested_reviewers": [
+    { "login": "sarah-chen" },
+    { "login": "marcus-webb" }
+  ],
+  "labels": [
+    { "name": "documentation" },
+    { "name": "developer-guide" }
+  ],
+  "created_at": "2026-02-10T16:00:00Z",
+  "updated_at": "2026-02-10T16:00:00Z",
+  "mergeable": true,
+  "changed_files": 1,
+  "additions": 245,
+  "deletions": 0,
+  "diff_url": "https://github.com/company/docs/pull/42.diff",
+  "commits": 1,
+  "review_comments": 0,
+  "comments": 0
+}

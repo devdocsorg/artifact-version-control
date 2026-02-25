@@ -1,0 +1,10 @@
+{
+  "_comment": "GitHub PR Review — Engineering Review, Round 2: APPROVED",
+  "_state_transition": "Dev_decision → ALL_PASSED → GITHUB_devApprove → ENG_APPROVED",
+  
+  "url": "https://api.github.com/repos/company/docs/pulls/42/reviews/1002",
+  "user": { "login": "sarah-chen" },
+  "state": "APPROVED",
+  "submitted_at": "2026-02-11T16:15:00Z",
+  "body": "All issues addressed. ✅\n\n**Checklist Results (Round 2):**\n- ✅ Code Tested — API response format fixed, Python note added\n- ✅ Explanations Comprehensive — (passed in round 1)\n- ✅ Debugging Steps Clear — body parsing section is excellent, the framework-specific examples are exactly what users need\n\nApproved from engineering side. Over to PM."
+}

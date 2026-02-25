@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experiment B: Focused File Review</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--bdr:#30363d;--txt:#e6edf3;--muted:#8b949e;--dim:#484f58;
+--grn:#3fb950;--grn-bg:rgba(63,185,80,.12);--grn-bdr:rgba(63,185,80,.4);
+--red:#f85149;--red-bg:rgba(248,81,73,.12);--red-bdr:rgba(248,81,73,.4);
+--blu:#58a6ff;--blu-bg:rgba(88,166,255,.15);
+--yel:#d29922;--yel-bg:rgba(210,153,34,.15);
+--pur:#bc8cff;--r:8px;--mono:'SF Mono','Fira Code','Cascadia Code',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--txt);line-height:1.6}
+
+/* Top Bar */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:12px 24px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:16px}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar h1{font-size:16px;font-weight:600;white-space:nowrap}
+.badge{padding:2px 10px;border-radius:12px;font-size:11px;font-family:var(--mono)}
+.badge-branch{background:var(--blu-bg);color:var(--blu)}
+.topbar-stats{font-size:13px;color:var(--muted);display:flex;gap:12px;margin-left:16px}
+.stat-add{color:var(--grn)}.stat-del{color:var(--red)}
+
+/* File Nav */
+.file-nav{background:var(--bg3);border-bottom:1px solid var(--bdr);padding:8px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:52px;z-index:99}
+.file-select{background:var(--bg2);border:1px solid var(--bdr);color:var(--txt);padding:6px 12px;border-radius:var(--r);font-family:var(--mono);font-size:13px;cursor:pointer;min-width:200px}
+.file-select:focus{outline:none;border-color:var(--blu)}
+.nav-btn{background:var(--bg2);border:1px solid var(--bdr);color:var(--muted);padding:6px 14px;border-radius:var(--r);cursor:pointer;font-size:13px;display:flex;align-items:center;gap:6px;transition:all .15s}
+.nav-btn:hover:not(:disabled){background:var(--bg3);color:var(--txt)}
+.nav-btn:disabled{opacity:.3;cursor:not-allowed}
+.file-counter{font-size:13px;color:var(--dim)}
+.change-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.3px}
+.change-badge.added{background:var(--grn-bg);color:var(--grn)}.change-badge.removed{background:var(--red-bg);color:var(--red)}
+.change-badge.modified{background:var(--yel-bg);color:var(--yel)}.change-badge.unchanged{background:var(--bg3);color:var(--dim)}
+
+/* Mode Bar */
+.mode-bar{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:8px 24px;display:flex;align-items:center;gap:8px;position:sticky;top:104px;z-index:98}
+.mode-btn{background:none;border:1px solid transparent;color:var(--muted);padding:8px 16px;border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;display:flex;align-items:center;gap:6px}
+.mode-btn:hover{color:var(--txt);background:var(--bg3)}
+.mode-btn.active{background:var(--blu-bg);color:var(--blu);border-color:rgba(88,166,255,.3)}
+.mode-sep{width:1px;height:24px;background:var(--bdr);margin:0 4px}
+.mode-label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
+
+/* Content */
+.content{padding:0;min-height:calc(100vh - 160px)}
+
+/* PR Overview */
+.overview{padding:32px;max-width:900px;margin:0 auto}
+.overview h2{font-size:20px;margin-bottom:12px}
+.overview-desc{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:16px 20px;margin-bottom:24px;font-size:14px;line-height:1.7;color:var(--muted)}
+.overview-files{list-style:none}
+.overview-file{display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:8px;cursor:pointer;transition:all .15s;background:var(--bg2)}
+.overview-file:hover{background:var(--bg3);border-color:var(--blu)}
+.overview-file .name{font-family:var(--mono);font-size:14px;flex:1}
+.overview-file .desc{font-size:12px;color:var(--dim)}
+
+/* Diff view */
+.diff-block{font-family:var(--mono);font-size:13px;line-height:1.7;overflow-x:auto}
+.diff-line{display:flex;min-height:24px}
+.diff-ln{width:55px;text-align:right;padding:0 10px;color:var(--dim);user-select:none;flex-shrink:0;font-size:12px;border-right:1px solid var(--bdr)}
+.diff-ln-old{border-right:none}
+.diff-marker{width:28px;text-align:center;flex-shrink:0;font-weight:700;user-select:none}
+.diff-text{padding:0 16px;white-space:pre;flex:1}
+.diff-add{background:var(--grn-bg)}.diff-add .diff-marker{color:var(--grn)}
+.diff-del{background:var(--red-bg)}.diff-del .diff-marker{color:var(--red)}
+.diff-hunk{background:var(--blu-bg);color:var(--blu);padding:6px 16px;font-size:12px;font-weight:600;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+.diff-collapsed{padding:10px 16px;font-size:12px;color:var(--dim);background:rgba(255,255,255,.02);cursor:pointer;text-align:center;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+.diff-collapsed:hover{background:var(--bg3);color:var(--muted)}
+
+/* Source view */
+.source-view{font-family:var(--mono);font-size:13px;line-height:1.7;overflow-x:auto}
+.source-line{display:flex;min-height:24px}
+.source-ln{width:55px;text-align:right;padding:0 10px;color:var(--dim);user-select:none;flex-shrink:0;font-size:12px;border-right:1px solid var(--bdr)}
+.source-text{padding:0 16px;white-space:pre;flex:1}
+.source-highlight{background:var(--grn-bg);border-left:3px solid var(--grn)}
+
+/* Preview */
+.preview-pane{padding:32px 48px;max-width:860px;margin:0 auto}
+.preview-pane h1{font-size:32px;margin:28px 0 14px;padding-bottom:10px;border-bottom:1px solid var(--bdr);font-weight:600}
+.preview-pane h2{font-size:24px;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--bdr)}
+.preview-pane h3{font-size:18px;margin:20px 0 8px}
+.preview-pane h4{font-size:15px;margin:16px 0 6px}
+.preview-pane p{margin:10px 0;line-height:1.8}
+.preview-pane a{color:var(--blu);text-decoration:none}
+.preview-pane a:hover{text-decoration:underline}
+.preview-pane code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:13px}
+.preview-pane pre{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin:16px 0;overflow-x:auto}
+.preview-pane pre code{background:none;padding:0;font-size:13px;line-height:1.6}
+.preview-pane table{border-collapse:collapse;width:100%;margin:16px 0}
+.preview-pane th,.preview-pane td{border:1px solid var(--bdr);padding:10px 14px;text-align:left;font-size:13px}
+.preview-pane th{background:var(--bg3);font-weight:600}
+.preview-pane tr:nth-child(even){background:rgba(255,255,255,.02)}
+.preview-pane ul,.preview-pane ol{margin:10px 0;padding-left:28px}
+.preview-pane li{margin:5px 0;line-height:1.7}
+.preview-pane blockquote{border-left:3px solid var(--blu);padding:10px 20px;margin:16px 0;color:var(--muted);background:rgba(88,166,255,.05)}
+.preview-pane hr{border:none;border-top:1px solid var(--bdr);margin:24px 0}
+.preview-pane strong{color:#fff}
+
+/* Split Compare */
+.split-container{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 160px)}
+.split-pane{overflow:auto;border-right:1px solid var(--bdr)}
+.split-pane:last-child{border-right:none}
+.split-label{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:10}
+.split-label-old{background:var(--red-bg);color:var(--red)}
+.split-label-new{background:var(--grn-bg);color:var(--grn)}
+
+/* Deleted notice */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px;color:var(--dim);font-size:15px;gap:12px}
+.empty-state .icon{font-size:40px}
+
+/* Exp label */
+.exp-label{position:fixed;top:12px;right:16px;background:var(--pur);color:#fff;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;z-index:200;letter-spacing:.5px}
+
+/* Loading */
+.load{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:20px}
+.load h2{font-size:26px;font-weight:600}.load p{color:var(--muted);font-size:14px}
+.drop{border:2px dashed var(--bdr);border-radius:16px;padding:60px;text-align:center;cursor:pointer;transition:all .2s}
+.drop:hover,.drop.active{border-color:var(--blu);background:rgba(88,166,255,.03)}
+
+/* Keyboard hint */
+.kbd-hint{position:fixed;bottom:16px;right:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:8px 14px;font-size:11px;color:var(--dim);z-index:100}
+kbd{background:var(--bg3);padding:2px 6px;border-radius:3px;font-family:var(--mono);font-size:10px;border:1px solid var(--bdr);margin:0 2px}
+</style>
+</head>
+<body>
+<div class="exp-label">EXPERIMENT B — FOCUSED FILE REVIEW</div>
+<div id="app">
+<div class="load" id="loader">
+<h2>📦 Artifact Diff Viewer</h2>
+<p>Experiment B: One file at a time, full-width focused review</p>
+<div class="drop" id="dropzone" onclick="document.getElementById('fileInput').click()">
+<p style="font-size:48px;margin-bottom:16px">📄</p>
+<p style="font-size:15px">Drop diff_bundle.json here or click to browse</p>
+</div>
+<input type="file" id="fileInput" accept=".json" style="display:none"/>
+<p style="margin-top:20px;font-size:12px;color:var(--dim)">Or pass <code>?bundle=path/to/file.json</code></p>
+</div>
+<div id="viewer" style="display:none">
+<div class="topbar">
+<div class="topbar-left">
+<h1 id="prTitle"></h1>
+<span class="badge badge-branch" id="branchName"></span>
+</div>
+<div class="topbar-stats" id="headerStats"></div>
+</div>
+<div class="file-nav" id="fileNav">
+<button class="nav-btn" id="prevBtn" onclick="navFile(-1)">← Prev</button>
+<select class="file-select" id="fileSelect" onchange="selectFile(this.value)"></select>
+<span id="fileBadge"></span>
+<button class="nav-btn" id="nextBtn" onclick="navFile(1)">Next →</button>
+<span class="file-counter" id="fileCounter"></span>
+</div>
+<div class="mode-bar" id="modeBar">
+<span class="mode-label">View:</span>
+<button class="mode-btn active" data-mode="diff" onclick="setMode('diff')">📝 Diff</button>
+<button class="mode-btn" data-mode="source" onclick="setMode('source')">📄 New Source</button>
+<button class="mode-btn" data-mode="preview" onclick="setMode('preview')">👁 Preview</button>
+<span class="mode-sep"></span>
+<span class="mode-label">Compare:</span>
+<button class="mode-btn" data-mode="split-source" onclick="setMode('split-source')">⟺ Split Source</button>
+<button class="mode-btn" data-mode="split-preview" onclick="setMode('split-preview')">⟺ Split Preview</button>
+</div>
+<div class="content" id="content"></div>
+</div>
+</div>
+<div class="kbd-hint">
+<kbd>←</kbd> <kbd>→</kbd> navigate files &nbsp;·&nbsp; <kbd>1</kbd>-<kbd>5</kbd> switch modes &nbsp;·&nbsp; <kbd>O</kbd> overview
+</div>
+
+<script>
+let BUNDLE = null;
+let currentFileIdx = -1; // -1 = overview
+let currentMode = 'diff';
+
+// --- Loading ---
+const params = new URLSearchParams(location.search);
+const bundlePath = params.get('bundle');
+if (bundlePath) fetch(bundlePath).then(r => r.json()).then(load).catch(console.error);
+document.getElementById('fileInput').onchange = e => {
+  const f = e.target.files[0];
+  if (f) { const r = new FileReader(); r.onload = ev => load(JSON.parse(ev.target.result)); r.readAsText(f); }
+};
+const dz = document.getElementById('dropzone');
+dz.ondragover = e => { e.preventDefault(); dz.classList.add('active'); };
+dz.ondragleave = () => dz.classList.remove('active');
+dz.ondrop = e => { e.preventDefault(); dz.classList.remove('active'); const f = e.dataTransfer.files[0]; if (f) { const r = new FileReader(); r.onload = ev => load(JSON.parse(ev.target.result)); r.readAsText(f); } };
+
+// --- Keyboard shortcuts ---
+document.addEventListener('keydown', e => {
+  if (!BUNDLE) return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'ArrowLeft') navFile(-1);
+  else if (e.key === 'ArrowRight') navFile(1);
+  else if (e.key === '1') setMode('diff');
+  else if (e.key === '2') setMode('source');
+  else if (e.key === '3') setMode('preview');
+  else if (e.key === '4') setMode('split-source');
+  else if (e.key === '5') setMode('split-preview');
+  else if (e.key === 'o' || e.key === 'O') selectFile(-1);
+});
+
+// --- File reconstruction ---
+function getFileChanges(fileName) { return BUNDLE.changes.filter(c => c.file === fileName); }
+
+function reconstructFile(fileName, version = 'new') {
+  const changes = getFileChanges(fileName);
+  const parts = [];
+  for (const ch of changes) {
+    if (ch.type === 'unchanged') parts.push(ch.content?.content || '');
+    else if (ch.type === 'added') { if (version === 'new') parts.push(ch.content?.content || ''); }
+    else if (ch.type === 'removed') { if (version === 'old') parts.push(ch.removed_content?.content || ''); }
+    else if (ch.type === 'modified') { parts.push(version === 'new' ? (ch.after?.content || '') : (ch.before?.content || '')); }
+  }
+  return parts.join('\n');
+}
+
+function getHighlightedLineRanges(fileName) {
+  const changes = getFileChanges(fileName);
+  const ranges = [];
+  let lineNum = 1;
+  for (const ch of changes) {
+    let content = '', isHighlight = false;
+    if (ch.type === 'unchanged') content = ch.content?.content || '';
+    else if (ch.type === 'added') { content = ch.content?.content || ''; isHighlight = true; }
+    else if (ch.type === 'removed') continue;
+    else if (ch.type === 'modified') { content = ch.after?.content || ''; isHighlight = true; }
+    const lines = content.split('\n');
+    if (isHighlight) ranges.push({ start: lineNum, end: lineNum + lines.length - 1 });
+    lineNum += lines.length;
+  }
+  return ranges;
+}
+
+// --- Diff building ---
+function buildDiffLines(fileName) {
+  const changes = getFileChanges(fileName);
+  const lines = [];
+  let oldLine = 1, newLine = 1;
+  for (const ch of changes) {
+    if (ch.type === 'unchanged') {
+      const textLines = (ch.content?.content || '').split('\n');
+      if (ch.collapsed && textLines.length > 8) {
+        for (let i = 0; i < 3; i++) lines.push({ type: 'ctx', old: oldLine + i, new: newLine + i, text: textLines[i] });
+        lines.push({ type: 'fold', count: textLines.length - 6 });
+        for (let i = textLines.length - 3; i < textLines.length; i++) lines.push({ type: 'ctx', old: oldLine + i, new: newLine + i, text: textLines[i] });
+      } else {
+        textLines.forEach((t, i) => lines.push({ type: 'ctx', old: oldLine + i, new: newLine + i, text: t }));
+      }
+      oldLine += textLines.length; newLine += textLines.length;
+    } else if (ch.type === 'added') {
+      lines.push({ type: 'hunk', text: `${ch.description || 'Added'} — ${ch.location || ''}` });
+      (ch.content?.content || '').split('\n').forEach(t => lines.push({ type: 'add', new: newLine++, text: t }));
+    } else if (ch.type === 'removed') {
+      lines.push({ type: 'hunk', text: `${ch.description || 'Removed'} — ${ch.location || ''}` });
+      (ch.removed_content?.content || '').split('\n').forEach(t => lines.push({ type: 'del', old: oldLine++, text: t }));
+    } else if (ch.type === 'modified') {
+      lines.push({ type: 'hunk', text: `${ch.description || 'Modified'} — ${ch.location || ''}` });
+      (ch.before?.content || '').split('\n').forEach(t => lines.push({ type: 'del', old: oldLine++, text: t }));
+      (ch.after?.content || '').split('\n').forEach(t => lines.push({ type: 'add', new: newLine++, text: t }));
+    }
+  }
+  return lines;
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// --- Rendering ---
+function renderDiff(fileName) {
+  const lines = buildDiffLines(fileName);
+  let html = '<div class="diff-block">';
+  for (const line of lines) {
+    if (line.type === 'hunk') html += `<div class="diff-hunk">@@ ${escHtml(line.text)} @@</div>`;
+    else if (line.type === 'fold') html += `<div class="diff-collapsed" onclick="this.style.display='none'">⋯ ${line.count} unchanged lines</div>`;
+    else {
+      const cls = line.type === 'add' ? 'diff-add' : line.type === 'del' ? 'diff-del' : '';
+      const marker = line.type === 'add' ? '+' : line.type === 'del' ? '−' : ' ';
+      html += `<div class="diff-line ${cls}"><span class="diff-ln diff-ln-old">${line.old||''}</span><span class="diff-ln">${line.new||''}</span><span class="diff-marker">${marker}</span><span class="diff-text">${escHtml(line.text)}</span></div>`;
+    }
+  }
+  return html + '</div>';
+}
+
+function renderSource(fileName, version = 'new') {
+  const source = reconstructFile(fileName, version);
+  const highlights = version === 'new' ? getHighlightedLineRanges(fileName) : [];
+  const lines = source.split('\n');
+  let html = '<div class="source-view">';
+  lines.forEach((text, i) => {
+    const ln = i + 1;
+    const hl = highlights.some(r => ln >= r.start && ln <= r.end) ? ' source-highlight' : '';
+    html += `<div class="source-line${hl}"><span class="source-ln">${ln}</span><span class="source-text">${escHtml(text)}</span></div>`;
+  });
+  return html + '</div>';
+}
+
+function renderPreview(fileName, version = 'new') {
+  const source = reconstructFile(fileName, version);
+  if (!source.trim()) return '<div class="empty-state"><span class="icon">🗑️</span>File does not exist in this version</div>';
+  return `<div class="preview-pane">${marked.parse(source)}</div>`;
+}
+
+function renderSplitSource(fileName) {
+  return `<div class="split-container">
+    <div class="split-pane"><div class="split-label split-label-old">⬅ Before</div>${renderSource(fileName, 'old')}</div>
+    <div class="split-pane"><div class="split-label split-label-new">After ➡</div>${renderSource(fileName, 'new')}</div>
+  </div>`;
+}
+
+function renderSplitPreview(fileName) {
+  return `<div class="split-container">
+    <div class="split-pane"><div class="split-label split-label-old">⬅ Before (rendered)</div>${renderPreview(fileName, 'old')}</div>
+    <div class="split-pane"><div class="split-label split-label-new">After (rendered) ➡</div>${renderPreview(fileName, 'new')}</div>
+  </div>`;
+}
+
+function renderOverview() {
+  const m = BUNDLE.metadata, s = BUNDLE.summary.stats;
+  let html = '<div class="overview">';
+  html += `<h2>${m.pr_title || `Branch: ${m.branch_name}`}</h2>`;
+  if (m.pr_description) html += `<div class="overview-desc">${escHtml(m.pr_description)}</div>`;
+  html += `<h3 style="font-size:14px;color:var(--muted);margin-bottom:12px">${s.files_changed + s.files_added + s.files_removed} files changed · <span style="color:var(--grn)">+${s.total_additions}</span> · <span style="color:var(--red)">−${s.total_removals}</span></h3>`;
+  html += '<div class="overview-files">';
+  BUNDLE.summary.files.forEach((f, i) => {
+    if (f.status === 'unchanged') return;
+    html += `<div class="overview-file" onclick="selectFile(${i})">
+      <span class="change-badge ${f.status}">${f.status}</span>
+      <span class="name">${f.path}</span>
+      <span class="desc">${f.description || ''}</span>
+      <span style="color:var(--dim)">→</span>
+    </div>`;
+  });
+  html += '</div></div>';
+  return html;
+}
+
+// --- Navigation ---
+function selectFile(idx) {
+  idx = parseInt(idx);
+  currentFileIdx = idx;
+  const sel = document.getElementById('fileSelect');
+  sel.value = idx;
+  
+  const files = BUNDLE.summary.files;
+  const counter = document.getElementById('fileCounter');
+  const badge = document.getElementById('fileBadge');
+  
+  if (idx === -1) {
+    counter.textContent = 'Overview';
+    badge.innerHTML = '';
+    document.getElementById('content').innerHTML = renderOverview();
+    document.querySelectorAll('.mode-btn').forEach(b => b.disabled = true);
+  } else {
+    const f = files[idx];
+    counter.textContent = `${idx + 1} / ${files.length}`;
+    badge.innerHTML = `<span class="change-badge ${f.status}">${f.status}</span>`;
+    document.querySelectorAll('.mode-btn').forEach(b => b.disabled = false);
+    renderCurrentView();
+  }
+  
+  document.getElementById('prevBtn').disabled = idx <= -1;
+  document.getElementById('nextBtn').disabled = idx >= files.length - 1;
+}
+
+function navFile(dir) {
+  const max = BUNDLE.summary.files.length - 1;
+  const next = Math.max(-1, Math.min(max, currentFileIdx + dir));
+  selectFile(next);
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  if (currentFileIdx >= 0) renderCurrentView();
+}
+
+function renderCurrentView() {
+  const content = document.getElementById('content');
+  const fileName = BUNDLE.summary.files[currentFileIdx].path;
+  
+  switch (currentMode) {
+    case 'diff': content.innerHTML = renderDiff(fileName); break;
+    case 'source': content.innerHTML = renderSource(fileName, 'new'); break;
+    case 'preview': content.innerHTML = renderPreview(fileName, 'new'); break;
+    case 'split-source': content.innerHTML = renderSplitSource(fileName); break;
+    case 'split-preview': content.innerHTML = renderSplitPreview(fileName); break;
+  }
+  content.scrollTop = 0;
+}
+
+// --- Load ---
+function load(data) {
+  BUNDLE = data;
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('viewer').style.display = 'block';
+  
+  const m = BUNDLE.metadata, s = BUNDLE.summary.stats;
+  document.getElementById('prTitle').textContent = m.pr_title || `Branch: ${m.branch_name}`;
+  document.getElementById('branchName').textContent = m.branch_name;
+  document.getElementById('headerStats').innerHTML = `<span class="stat-add">+${s.total_additions}</span><span class="stat-del">−${s.total_removals}</span><span style="color:var(--dim)">${m.artifact_type}</span>`;
+  
+  // Populate file select
+  const sel = document.getElementById('fileSelect');
+  sel.innerHTML = '<option value="-1">📋 Overview</option>';
+  BUNDLE.summary.files.forEach((f, i) => {
+    const icon = f.status === 'added' ? '🟢' : f.status === 'removed' ? '🔴' : f.status === 'modified' ? '🟡' : '⚪';
+    sel.innerHTML += `<option value="${i}">${icon} ${f.path}</option>`;
+  });
+  
+  // Start at overview
+  selectFile(-1);
+}
+</script>
+</body>
+</html>

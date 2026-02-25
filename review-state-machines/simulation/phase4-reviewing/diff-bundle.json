@@ -1,0 +1,126 @@
+{
+  "_comment": "This is the DiffBundle that the artifact-version-control viewer would render for this review",
+  "metadata": {
+    "branch": "feature/DOC-201",
+    "base": "main",
+    "type": "markdown",
+    "author": "alex-rivera",
+    "status": "Open",
+    "pr_number": 42,
+    "pr_url": "https://github.com/company/docs/pull/42",
+    "jira_ticket": "DOC-201",
+    "doc_type": "developer-guide",
+    "created_at": "2026-02-10T16:00:00Z"
+  },
+  "summary": {
+    "files_changed": 1,
+    "files_added": 1,
+    "files_removed": 0,
+    "total_additions": 245,
+    "total_deletions": 0,
+    "description": "New developer guide: Webhook Setup. Covers creation, event types, payload format, signature verification, retry behavior, troubleshooting."
+  },
+  "review_plan": {
+    "summary": "New developer guide for webhook setup. Primary review concerns: code sample accuracy (3 languages), API response format, and completeness of troubleshooting section.",
+    "risk_level": "medium",
+    "estimated_review_time": "15 min",
+    "roles": [
+      { "id": "engineering", "name": "Engineering Reviewer", "icon": "⚙️", "desc": "Checks code accuracy, API correctness, technical explanations" },
+      { "id": "pm", "name": "PM Reviewer", "icon": "📋", "desc": "Checks workflow coverage, user outcomes, product alignment" }
+    ],
+    "checks": [
+      {
+        "id": "code-tested-python",
+        "question": "Does the Python HMAC signature verification code work correctly?",
+        "why": "This is the primary code sample users will copy. A bug here means broken integrations.",
+        "category": "code-tested",
+        "severity": "critical",
+        "roles": ["engineering"],
+        "file": "docs/guides/webhooks/setup.md",
+        "view": "source",
+        "line_start": 79,
+        "line_end": 93,
+        "look_for": "Verify hmac.new() usage, correct encoding, proper comparison with timing-safe equals"
+      },
+      {
+        "id": "code-tested-api-response",
+        "question": "Does the sample API response match the actual v2 API format?",
+        "why": "If the response format is wrong, developers will write code that breaks on the first real call.",
+        "category": "code-tested",
+        "severity": "critical",
+        "roles": ["engineering"],
+        "file": "docs/guides/webhooks/setup.md",
+        "view": "source",
+        "line_start": 28,
+        "line_end": 42,
+        "look_for": "Check that secret is in credentials object (v2 format), not flat (v1 format)"
+      },
+      {
+        "id": "explanations-prereqs",
+        "question": "Are prerequisites clearly stated before the user starts?",
+        "why": "Missing prerequisites = user fails at step 1 and blames the docs.",
+        "category": "explanations-comprehensive",
+        "severity": "high",
+        "roles": ["engineering", "pm"],
+        "file": "docs/guides/webhooks/setup.md",
+        "view": "source",
+        "line_start": 12,
+        "line_end": 18,
+        "look_for": "API key scope, HTTPS requirement, response time requirement all listed"
+      },
+      {
+        "id": "basic-workflows-create",
+        "question": "Is the webhook creation workflow complete from start to finish?",
+        "why": "This is the #1 task users need to accomplish. Must be airtight.",
+        "category": "basic-workflows",
+        "severity": "critical",
+        "roles": ["pm"],
+        "file": "docs/guides/webhooks/setup.md",
+        "view": "source",
+        "line_start": 20,
+        "line_end": 60,
+        "look_for": "Both API and UI paths documented, secret storage warning, success verification"
+      },
+      {
+        "id": "troubleshooting-body-parsing",
+        "question": "Is the #1 support issue (body parsing) covered in troubleshooting?",
+        "why": "This is the most common webhook integration failure. Missing it = support tickets.",
+        "category": "debugging-steps-clear",
+        "severity": "high",
+        "roles": ["engineering", "pm"],
+        "file": "docs/guides/webhooks/setup.md",
+        "view": "source",
+        "line_start": 191,
+        "line_end": 215,
+        "look_for": "Framework-specific raw body examples for Express, Flask, Django"
+      },
+      {
+        "id": "outcome-guarantees-limits",
+        "question": "Are all limits and quotas documented so users aren't surprised?",
+        "why": "Undocumented limits cause production incidents and angry customers.",
+        "category": "outcome-guarantees",
+        "severity": "high",
+        "roles": ["pm"],
+        "file": "docs/guides/webhooks/setup.md",
+        "view": "source",
+        "line_start": 230,
+        "line_end": 245,
+        "look_for": "25 webhooks per account, 256KB payload, 30s timeout, 5 retries, auto-disable threshold"
+      }
+    ]
+  },
+  "changes": [
+    {
+      "file": "docs/guides/webhooks/setup.md",
+      "status": "added",
+      "additions": 245,
+      "deletions": 0,
+      "renderables": [
+        {
+          "type": "diff",
+          "content": "--- /dev/null\n+++ b/docs/guides/webhooks/setup.md\n@@ -0,0 +1,245 @@\n+# Webhook Setup Guide\n+...(full file content)..."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "review_plan": {
+    "summary": "This PR restructures the API documentation by moving error codes from a standalone errors.md file into inline error tables within each endpoint section of endpoints.md. The errors.md file is deleted, README links are updated, and the Projects section is reordered to come before Users.",
+    "risk_level": "medium",
+    "estimated_review_time": "8 min",
+    "generated_by": "ai",
+
+    "roles": [
+      { "id": "content", "name": "Content Reviewer", "icon": "📝", "desc": "Checks accuracy, completeness, and flow of documentation" },
+      { "id": "technical", "name": "API Expert", "icon": "⚙️", "desc": "Verifies API specification accuracy and completeness" },
+      { "id": "docs-infra", "name": "Docs Infrastructure", "icon": "🔧", "desc": "Checks rendering, links, and build process" }
+    ],
+
+    "categories": [
+      { "id": "content-migration", "name": "Content Migration", "icon": "📦", "desc": "Was content moved correctly?" },
+      { "id": "structure", "name": "Document Structure", "icon": "🏗️", "desc": "Does the organization make sense?" },
+      { "id": "links-refs", "name": "Links & References", "icon": "🔗", "desc": "Are all cross-references correct?" },
+      { "id": "appearance", "name": "Visual Appearance", "icon": "👁", "desc": "Does it render correctly?" }
+    ],
+
+    "checks": [
+      {
+        "id": "migration-1",
+        "question": "Were ALL error codes from errors.md moved into endpoints.md?",
+        "why": "The PR deletes errors.md entirely — any error codes not moved are permanently lost",
+        "category": "content-migration",
+        "severity": "critical",
+        "roles": ["content", "technical"],
+        "file": "endpoints.md",
+        "view": "compare",
+        "also_check": [{ "file": "errors.md", "view": "old-preview", "label": "See deleted error codes" }],
+        "look_for": "The old errors.md had tables for 400, 401, 403, 404, 429, and 500 errors with Code/Message/Fix columns. Verify each appears in an Errors table under its relevant endpoint in the new version."
+      },
+      {
+        "id": "migration-2",
+        "question": "Was the Error Response Format example preserved somewhere?",
+        "why": "errors.md had a general JSON error response format example that developers reference — it shouldn't disappear",
+        "category": "content-migration",
+        "severity": "high",
+        "roles": ["content", "technical"],
+        "file": "errors.md",
+        "view": "old-preview",
+        "also_check": [{ "file": "endpoints.md", "view": "preview", "label": "Check if format example exists in new version" }],
+        "look_for": "The old errors.md showed the general { error: { code, message, details } } JSON format. Look for this in the new endpoints.md — if it's missing, developers lose a key reference."
+      },
+      {
+        "id": "structure-1",
+        "question": "Does the new endpoint ordering (Projects → Users) make sense?",
+        "why": "The PR reorders sections — this affects the reading experience for developers using the docs",
+        "category": "structure",
+        "severity": "medium",
+        "roles": ["content"],
+        "file": "endpoints.md",
+        "view": "preview",
+        "look_for": "Read through the rendered preview. Does Projects before Users feel natural? Consider: are Projects the more commonly used endpoints? Do examples reference Users from Projects?"
+      },
+      {
+        "id": "structure-2",
+        "question": "Does the inline error table pattern feel consistent across all endpoints?",
+        "why": "Each endpoint section now has its own Errors table — the format should be consistent",
+        "category": "structure",
+        "severity": "medium",
+        "roles": ["content", "technical"],
+        "file": "endpoints.md",
+        "view": "source",
+        "look_for": "Scroll through the Read Through view. Each endpoint (List Projects, Create Project, Delete Project, List Users, Get User, Create User) should have an Errors section with a Status|Code|Description table in the same format."
+      },
+      {
+        "id": "links-1",
+        "question": "Does the README Table of Contents still list all docs correctly?",
+        "why": "errors.md was removed but the README listed it — the link must be gone and description updated",
+        "category": "links-refs",
+        "severity": "high",
+        "roles": ["content", "docs-infra"],
+        "file": "README.md",
+        "view": "compare",
+        "look_for": "In the Before/After comparison: the old version had '- Error Codes — Error responses and troubleshooting'. The new version should NOT have this line, and the Endpoints entry should mention 'inline error codes'."
+      },
+      {
+        "id": "links-2",
+        "question": "Are the getting-started steps in the README still accurate?",
+        "why": "The README had numbered steps including 'Handle errors gracefully' linking to errors.md",
+        "category": "links-refs",
+        "severity": "high",
+        "roles": ["content", "docs-infra"],
+        "file": "README.md",
+        "view": "diff",
+        "look_for": "The diff should show the removal of step '3. Handle errors gracefully(errors.md)'. Verify the remaining steps (1. Get API key, 2. Make first request) still make sense as a complete getting-started flow."
+      },
+      {
+        "id": "appearance-1",
+        "question": "Do the new error tables render correctly in the preview?",
+        "why": "Markdown tables can break with formatting issues — these are new tables added to every endpoint section",
+        "category": "appearance",
+        "severity": "medium",
+        "roles": ["docs-infra"],
+        "file": "endpoints.md",
+        "view": "preview",
+        "look_for": "Scroll through the rendered preview and check each Errors table. All should render as proper tables with Status, Code, and Description columns. No raw pipe characters should be visible."
+      },
+      {
+        "id": "appearance-2",
+        "question": "Does the README render cleanly after the changes?",
+        "why": "Small changes to lists and links can break markdown rendering",
+        "category": "appearance",
+        "severity": "low",
+        "roles": ["docs-infra"],
+        "file": "README.md",
+        "view": "preview",
+        "look_for": "The Table of Contents should be a clean bullet list with 3 items (not 4). The numbered steps at the top should show 2 items. No orphaned list markers or broken formatting."
+      }
+    ]
+  }
+}

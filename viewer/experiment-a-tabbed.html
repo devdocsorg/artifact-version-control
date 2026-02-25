@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experiment A: Tabbed File Cards</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--bdr:#30363d;--txt:#e6edf3;--muted:#8b949e;--dim:#484f58;
+--grn:#3fb950;--grn-bg:rgba(63,185,80,.12);--grn-bdr:rgba(63,185,80,.4);
+--red:#f85149;--red-bg:rgba(248,81,73,.12);--red-bdr:rgba(248,81,73,.4);
+--blu:#58a6ff;--blu-bg:rgba(88,166,255,.15);
+--yel:#d29922;--yel-bg:rgba(210,153,34,.15);
+--pur:#bc8cff;--r:8px;--mono:'SF Mono','Fira Code','Cascadia Code',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--txt);line-height:1.6}
+
+/* Header */
+.hdr{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:20px 32px;position:sticky;top:0;z-index:100}
+.hdr-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.hdr h1{font-size:22px;font-weight:600}
+.badge{padding:3px 10px;border-radius:12px;font-size:12px;font-family:var(--mono)}
+.badge-branch{background:var(--blu-bg);color:var(--blu)}
+.badge-status{font-weight:600;text-transform:uppercase}
+.s-active{background:var(--yel-bg);color:var(--yel)}.s-merged{background:var(--grn-bg);color:var(--grn)}.s-canceled{background:var(--red-bg);color:var(--red)}
+.hdr-meta{display:flex;gap:20px;font-size:14px;color:var(--muted);align-items:center}
+.stat-add{color:var(--grn)}.stat-del{color:var(--red)}
+
+/* Layout */
+.layout{display:flex;min-height:calc(100vh - 90px)}
+.sidebar{width:260px;min-width:260px;background:var(--bg2);border-right:1px solid var(--bdr);overflow-y:auto;padding:16px 0}
+.sidebar h3{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);padding:8px 20px;margin-bottom:4px}
+.file-item{display:flex;align-items:center;gap:10px;padding:8px 20px;cursor:pointer;font-size:13px;font-family:var(--mono);border-left:3px solid transparent;transition:all .15s}
+.file-item:hover{background:var(--bg3)}
+.file-item.active{background:var(--bg3);border-left-color:var(--blu)}
+.file-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.file-dot.added{background:var(--grn)}.file-dot.removed{background:var(--red)}.file-dot.modified{background:var(--yel)}.file-dot.unchanged{background:var(--dim)}
+.file-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.file-stat{font-size:11px;color:var(--dim)}
+
+/* Main content */
+.main{flex:1;overflow-y:auto;padding:24px 32px 100px}
+
+/* PR Description */
+.pr-desc{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:16px 20px;margin-bottom:28px;font-size:14px;line-height:1.7;color:var(--muted)}
+
+/* File Card */
+.file-card{border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:24px;overflow:hidden;background:var(--bg2)}
+.file-card-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--bg3);border-bottom:1px solid var(--bdr)}
+.file-card-header h3{font-size:14px;font-family:var(--mono);font-weight:500}
+.change-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.3px}
+.change-badge.added{background:var(--grn-bg);color:var(--grn);border:1px solid var(--grn-bdr)}
+.change-badge.removed{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bdr)}
+.change-badge.modified{background:var(--yel-bg);color:var(--yel);border:1px solid rgba(210,153,34,.4)}
+.change-badge.unchanged{background:var(--bg3);color:var(--dim);border:1px solid var(--bdr)}
+.file-card-stat{margin-left:auto;font-size:12px;color:var(--dim)}
+
+/* Tabs */
+.tab-bar{display:flex;gap:0;border-bottom:1px solid var(--bdr);background:var(--bg2)}
+.tab{padding:10px 20px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;user-select:none}
+.tab:hover{color:var(--txt);background:rgba(255,255,255,.03)}
+.tab.active{color:var(--blu);border-bottom-color:var(--blu)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Diff view */
+.diff-block{font-family:var(--mono);font-size:13px;line-height:1.6;overflow-x:auto}
+.diff-line{display:flex;min-height:22px}
+.diff-ln{width:50px;text-align:right;padding:0 8px;color:var(--dim);user-select:none;flex-shrink:0;font-size:12px;border-right:1px solid var(--bdr)}
+.diff-ln-old{border-right:none}
+.diff-marker{width:24px;text-align:center;flex-shrink:0;font-weight:700;user-select:none}
+.diff-text{padding:0 12px;white-space:pre;flex:1}
+.diff-add{background:var(--grn-bg)}.diff-add .diff-marker{color:var(--grn)}
+.diff-del{background:var(--red-bg)}.diff-del .diff-marker{color:var(--red)}
+.diff-ctx{}.diff-ctx .diff-marker{color:var(--dim)}
+.diff-hunk{background:var(--blu-bg);color:var(--blu);padding:4px 12px;font-size:12px;font-weight:600;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+.diff-collapsed{padding:8px 16px;font-size:12px;color:var(--dim);background:var(--bg);cursor:pointer;text-align:center;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+.diff-collapsed:hover{background:var(--bg3);color:var(--muted)}
+
+/* Source view */
+.source-view{font-family:var(--mono);font-size:13px;line-height:1.6;overflow-x:auto}
+.source-line{display:flex;min-height:22px}
+.source-ln{width:50px;text-align:right;padding:0 8px;color:var(--dim);user-select:none;flex-shrink:0;font-size:12px;border-right:1px solid var(--bdr)}
+.source-text{padding:0 12px;white-space:pre;flex:1}
+.source-highlight{background:var(--grn-bg);border-left:3px solid var(--grn)}
+.source-highlight .source-ln{color:var(--grn)}
+
+/* Preview view */
+.preview-view{padding:24px 32px;max-width:800px}
+.preview-view h1{font-size:28px;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--bdr)}
+.preview-view h2{font-size:22px;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--bdr)}
+.preview-view h3{font-size:17px;margin:16px 0 8px}
+.preview-view h4{font-size:14px;margin:12px 0 6px}
+.preview-view p{margin:8px 0;color:var(--txt);line-height:1.7}
+.preview-view a{color:var(--blu);text-decoration:none}
+.preview-view a:hover{text-decoration:underline}
+.preview-view code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:13px}
+.preview-view pre{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin:12px 0;overflow-x:auto}
+.preview-view pre code{background:none;padding:0;font-size:13px;line-height:1.5}
+.preview-view table{border-collapse:collapse;width:100%;margin:12px 0}
+.preview-view th,.preview-view td{border:1px solid var(--bdr);padding:8px 12px;text-align:left;font-size:13px}
+.preview-view th{background:var(--bg3);font-weight:600}
+.preview-view tr:nth-child(even){background:rgba(255,255,255,.02)}
+.preview-view ul,.preview-view ol{margin:8px 0;padding-left:24px}
+.preview-view li{margin:4px 0}
+.preview-view blockquote{border-left:3px solid var(--blu);padding:8px 16px;margin:12px 0;color:var(--muted);background:rgba(88,166,255,.05)}
+.preview-view hr{border:none;border-top:1px solid var(--bdr);margin:20px 0}
+.preview-view strong{color:#fff}
+
+/* Deleted file notice */
+.deleted-notice{padding:24px;text-align:center;color:var(--red);font-size:14px}
+.deleted-notice .icon{font-size:32px;margin-bottom:8px}
+
+/* Added file highlight */
+.new-file-notice{padding:8px 16px;background:var(--grn-bg);color:var(--grn);font-size:12px;font-weight:600;border-bottom:1px solid var(--grn-bdr)}
+
+/* Loading */
+.load{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:20px}
+.load h2{font-size:26px;font-weight:600}.load p{color:var(--muted);font-size:14px}
+.drop{border:2px dashed var(--bdr);border-radius:16px;padding:60px;text-align:center;cursor:pointer;transition:all .2s}
+.drop:hover,.drop.active{border-color:var(--blu);background:rgba(88,166,255,.03)}
+.exp-label{position:fixed;top:12px;right:16px;background:var(--pur);color:#fff;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;z-index:200;letter-spacing:.5px}
+</style>
+</head>
+<body>
+<div class="exp-label">EXPERIMENT A — TABBED FILE CARDS</div>
+<div id="app">
+<div class="load" id="loader">
+<h2>📦 Artifact Diff Viewer</h2>
+<p>Experiment A: Tabbed per-file cards — Changes | Source | Preview</p>
+<div class="drop" id="dropzone" onclick="document.getElementById('fileInput').click()">
+<p style="font-size:48px;margin-bottom:16px">📄</p>
+<p style="font-size:15px">Drop diff_bundle.json here or click to browse</p>
+</div>
+<input type="file" id="fileInput" accept=".json" style="display:none"/>
+<p style="margin-top:20px;font-size:12px;color:var(--dim)">Or pass <code>?bundle=path/to/file.json</code></p>
+</div>
+<div id="viewer" style="display:none">
+<div class="hdr">
+<div class="hdr-top">
+<h1 id="prTitle"></h1>
+<span class="badge badge-branch" id="branchName"></span>
+<span class="badge badge-status" id="statusBadge"></span>
+</div>
+<div class="hdr-meta" id="headerStats"></div>
+</div>
+<div class="layout">
+<div class="sidebar" id="sidebar"><h3>Changed Files</h3><div id="fileList"></div></div>
+<div class="main" id="mainContent">
+<div class="pr-desc" id="prDesc"></div>
+<div id="fileCards"></div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+let BUNDLE = null;
+
+// --- Bundle loading ---
+const params = new URLSearchParams(location.search);
+const bundlePath = params.get('bundle');
+if (bundlePath) fetch(bundlePath).then(r => r.json()).then(load).catch(console.error);
+
+document.getElementById('fileInput').onchange = e => {
+  const f = e.target.files[0];
+  if (f) { const r = new FileReader(); r.onload = ev => load(JSON.parse(ev.target.result)); r.readAsText(f); }
+};
+const dz = document.getElementById('dropzone');
+dz.ondragover = e => { e.preventDefault(); dz.classList.add('active'); };
+dz.ondragleave = () => dz.classList.remove('active');
+dz.ondrop = e => { e.preventDefault(); dz.classList.remove('active'); const f = e.dataTransfer.files[0]; if (f) { const r = new FileReader(); r.onload = ev => load(JSON.parse(ev.target.result)); r.readAsText(f); } };
+
+// --- Reconstruct full file from chunks ---
+function getFileChanges(fileName) {
+  return BUNDLE.changes.filter(c => c.file === fileName);
+}
+
+function reconstructFile(fileName, version = 'new') {
+  const changes = getFileChanges(fileName);
+  const parts = [];
+  for (const ch of changes) {
+    if (ch.type === 'unchanged') {
+      parts.push(ch.content?.content || '');
+    } else if (ch.type === 'added') {
+      if (version === 'new') parts.push(ch.content?.content || '');
+    } else if (ch.type === 'removed') {
+      if (version === 'old') parts.push(ch.removed_content?.content || '');
+    } else if (ch.type === 'modified') {
+      if (version === 'new') parts.push(ch.after?.content || '');
+      else parts.push(ch.before?.content || '');
+    }
+  }
+  return parts.join('\n');
+}
+
+// Track which chunks are added/modified for highlighting in source view
+function getHighlightedLineRanges(fileName) {
+  const changes = getFileChanges(fileName);
+  const ranges = [];
+  let lineNum = 1;
+  for (const ch of changes) {
+    let content = '';
+    let isHighlight = false;
+    if (ch.type === 'unchanged') {
+      content = ch.content?.content || '';
+    } else if (ch.type === 'added') {
+      content = ch.content?.content || '';
+      isHighlight = true;
+    } else if (ch.type === 'removed') {
+      continue; // not in new version
+    } else if (ch.type === 'modified') {
+      content = ch.after?.content || '';
+      isHighlight = true;
+    }
+    const lines = content.split('\n');
+    if (isHighlight) {
+      ranges.push({ start: lineNum, end: lineNum + lines.length - 1 });
+    }
+    lineNum += lines.length;
+  }
+  return ranges;
+}
+
+function isLineHighlighted(lineNum, ranges) {
+  return ranges.some(r => lineNum >= r.start && lineNum <= r.end);
+}
+
+// --- Build unified diff lines ---
+function buildDiffLines(fileName) {
+  const changes = getFileChanges(fileName);
+  const lines = [];
+  let oldLine = 1, newLine = 1;
+
+  for (const ch of changes) {
+    if (ch.type === 'unchanged') {
+      const text = ch.content?.content || '';
+      const textLines = text.split('\n');
+      // If collapsed / many lines, show a collapsible summary
+      if (ch.collapsed && textLines.length > 6) {
+        // Show first 2, collapse middle, show last 2
+        for (let i = 0; i < 2; i++) {
+          lines.push({ type: 'ctx', old: oldLine + i, new: newLine + i, text: textLines[i] });
+        }
+        lines.push({ type: 'fold', count: textLines.length - 4, oldStart: oldLine + 2, newStart: newLine + 2 });
+        for (let i = textLines.length - 2; i < textLines.length; i++) {
+          lines.push({ type: 'ctx', old: oldLine + i, new: newLine + i, text: textLines[i] });
+        }
+      } else {
+        textLines.forEach((t, i) => {
+          lines.push({ type: 'ctx', old: oldLine + i, new: newLine + i, text: t });
+        });
+      }
+      oldLine += textLines.length;
+      newLine += textLines.length;
+    } else if (ch.type === 'added') {
+      const text = ch.content?.content || '';
+      const desc = ch.description || 'Added';
+      lines.push({ type: 'hunk', text: `${desc} — ${ch.location || ''}` });
+      text.split('\n').forEach(t => {
+        lines.push({ type: 'add', new: newLine++, text: t });
+      });
+    } else if (ch.type === 'removed') {
+      const text = ch.removed_content?.content || '';
+      const desc = ch.description || 'Removed';
+      lines.push({ type: 'hunk', text: `${desc} — ${ch.location || ''}` });
+      text.split('\n').forEach(t => {
+        lines.push({ type: 'del', old: oldLine++, text: t });
+      });
+    } else if (ch.type === 'modified') {
+      const before = ch.before?.content || '';
+      const after = ch.after?.content || '';
+      const desc = ch.description || 'Modified';
+      lines.push({ type: 'hunk', text: `${desc} — ${ch.location || ''}` });
+      before.split('\n').forEach(t => {
+        lines.push({ type: 'del', old: oldLine++, text: t });
+      });
+      after.split('\n').forEach(t => {
+        lines.push({ type: 'add', new: newLine++, text: t });
+      });
+    }
+  }
+  return lines;
+}
+
+// --- Render functions ---
+function renderDiffView(fileName) {
+  const diffLines = buildDiffLines(fileName);
+  let html = '<div class="diff-block">';
+  for (const line of diffLines) {
+    if (line.type === 'hunk') {
+      html += `<div class="diff-hunk">@@ ${escHtml(line.text)} @@</div>`;
+    } else if (line.type === 'fold') {
+      html += `<div class="diff-collapsed" onclick="this.style.display='none'">⋯ ${line.count} unchanged lines (click to expand)</div>`;
+    } else {
+      const cls = line.type === 'add' ? 'diff-add' : line.type === 'del' ? 'diff-del' : 'diff-ctx';
+      const marker = line.type === 'add' ? '+' : line.type === 'del' ? '−' : ' ';
+      const oldLn = line.old != null ? line.old : '';
+      const newLn = line.new != null ? line.new : '';
+      html += `<div class="diff-line ${cls}">
+        <span class="diff-ln diff-ln-old">${oldLn}</span>
+        <span class="diff-ln">${newLn}</span>
+        <span class="diff-marker">${marker}</span>
+        <span class="diff-text">${escHtml(line.text)}</span>
+      </div>`;
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderSourceView(fileName, version = 'new') {
+  const source = reconstructFile(fileName, version);
+  const highlights = version === 'new' ? getHighlightedLineRanges(fileName) : [];
+  const lines = source.split('\n');
+  let html = '<div class="source-view">';
+  lines.forEach((text, i) => {
+    const ln = i + 1;
+    const hl = isLineHighlighted(ln, highlights) ? ' source-highlight' : '';
+    html += `<div class="source-line${hl}">
+      <span class="source-ln">${ln}</span>
+      <span class="source-text">${escHtml(text)}</span>
+    </div>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderPreview(fileName, version = 'new') {
+  const source = reconstructFile(fileName, version);
+  if (!source.trim()) return '<div class="deleted-notice"><div class="icon">🗑️</div>This file was deleted</div>';
+  const html = marked.parse(source);
+  return `<div class="preview-view">${html}</div>`;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// --- Tab switching ---
+function switchTab(fileIdx, tabName) {
+  const card = document.querySelector(`[data-file-idx="${fileIdx}"]`);
+  if (!card) return;
+  card.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
+  card.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.dataset.tab === tabName));
+}
+
+// --- Main load ---
+function load(data) {
+  BUNDLE = data;
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('viewer').style.display = 'block';
+  renderHeader();
+  renderSidebar();
+  renderFileCards();
+}
+
+function renderHeader() {
+  const m = BUNDLE.metadata, s = BUNDLE.summary.stats;
+  document.getElementById('prTitle').textContent = m.pr_title || `Branch: ${m.branch_name}`;
+  document.getElementById('branchName').textContent = m.branch_name;
+  const sb = document.getElementById('statusBadge');
+  sb.textContent = m.status; sb.className = `badge badge-status s-${m.status}`;
+  const total = s.files_changed + s.files_added + s.files_removed;
+  document.getElementById('headerStats').innerHTML = `
+    <span>${total} file${total !== 1 ? 's' : ''} changed</span>
+    <span class="stat-add">+${s.total_additions} additions</span>
+    <span class="stat-del">−${s.total_removals} deletions</span>
+    <span style="color:var(--dim)">${m.artifact_type} · ${new Date(m.created_at).toLocaleDateString()}</span>`;
+  const desc = document.getElementById('prDesc');
+  if (m.pr_description) { desc.textContent = m.pr_description; desc.style.display = 'block'; }
+  else desc.style.display = 'none';
+}
+
+function renderSidebar() {
+  const fl = document.getElementById('fileList');
+  fl.innerHTML = '';
+  BUNDLE.summary.files.forEach((f, i) => {
+    const item = document.createElement('div');
+    item.className = 'file-item';
+    item.innerHTML = `<span class="file-dot ${f.status}"></span><span class="file-name">${f.path}</span><span class="file-stat">${f.description || ''}</span>`;
+    item.onclick = () => {
+      document.querySelectorAll('.file-item').forEach(x => x.classList.remove('active'));
+      item.classList.add('active');
+      const card = document.querySelector(`[data-file-idx="${i}"]`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    fl.appendChild(item);
+  });
+}
+
+function renderFileCards() {
+  const container = document.getElementById('fileCards');
+  container.innerHTML = '';
+  
+  BUNDLE.summary.files.forEach((file, idx) => {
+    // Skip unchanged files with no meaningful content
+    const changes = getFileChanges(file.path);
+    const hasChanges = file.status !== 'unchanged';
+    
+    const card = document.createElement('div');
+    card.className = 'file-card';
+    card.dataset.fileIdx = idx;
+    card.id = `file-${idx}`;
+    
+    // Header
+    const header = document.createElement('div');
+    header.className = 'file-card-header';
+    header.innerHTML = `
+      <span class="change-badge ${file.status}">${file.status}</span>
+      <h3>${file.path}</h3>
+      <span class="file-card-stat">${file.description || ''}</span>`;
+    card.appendChild(header);
+    
+    if (!hasChanges) {
+      const notice = document.createElement('div');
+      notice.style.cssText = 'padding:16px;color:var(--dim);font-size:13px;text-align:center';
+      notice.textContent = 'No changes';
+      card.appendChild(notice);
+      container.appendChild(card);
+      return;
+    }
+
+    // New file notice
+    if (file.status === 'added') {
+      const notice = document.createElement('div');
+      notice.className = 'new-file-notice';
+      notice.textContent = '✨ New file';
+      card.appendChild(notice);
+    }
+    
+    // Tabs
+    const isDeleted = file.status === 'removed';
+    const tabBar = document.createElement('div');
+    tabBar.className = 'tab-bar';
+    
+    const tabs = [
+      { id: 'diff', label: '📝 Changes', always: true },
+      { id: 'source', label: '📄 New Source', hidden: isDeleted },
+      { id: 'preview', label: '👁 Preview', hidden: isDeleted },
+      { id: 'old-source', label: '📄 Old Source', hidden: file.status === 'added' },
+      { id: 'old-preview', label: '👁 Old Preview', hidden: file.status === 'added' },
+    ];
+    
+    tabs.forEach((tab, i) => {
+      if (tab.hidden) return;
+      const el = document.createElement('div');
+      el.className = `tab${i === 0 ? ' active' : ''}`;
+      el.dataset.tab = tab.id;
+      el.textContent = tab.label;
+      el.onclick = () => switchTab(idx, tab.id);
+      tabBar.appendChild(el);
+    });
+    card.appendChild(tabBar);
+    
+    // Tab content: Changes
+    const diffContent = document.createElement('div');
+    diffContent.className = 'tab-content active';
+    diffContent.dataset.tab = 'diff';
+    diffContent.innerHTML = renderDiffView(file.path);
+    card.appendChild(diffContent);
+    
+    // Tab content: New Source
+    if (!isDeleted) {
+      const srcContent = document.createElement('div');
+      srcContent.className = 'tab-content';
+      srcContent.dataset.tab = 'source';
+      srcContent.innerHTML = renderSourceView(file.path, 'new');
+      card.appendChild(srcContent);
+      
+      // Tab content: Preview
+      const prevContent = document.createElement('div');
+      prevContent.className = 'tab-content';
+      prevContent.dataset.tab = 'preview';
+      prevContent.innerHTML = renderPreview(file.path, 'new');
+      card.appendChild(prevContent);
+    }
+    
+    // Tab content: Old Source
+    if (file.status !== 'added') {
+      const oldSrcContent = document.createElement('div');
+      oldSrcContent.className = 'tab-content';
+      oldSrcContent.dataset.tab = 'old-source';
+      oldSrcContent.innerHTML = renderSourceView(file.path, 'old');
+      card.appendChild(oldSrcContent);
+      
+      // Tab content: Old Preview  
+      const oldPrevContent = document.createElement('div');
+      oldPrevContent.className = 'tab-content';
+      oldPrevContent.dataset.tab = 'old-preview';
+      oldPrevContent.innerHTML = renderPreview(file.path, 'old');
+      card.appendChild(oldPrevContent);
+    }
+    
+    container.appendChild(card);
+  });
+}
+</script>
+</body>
+</html>

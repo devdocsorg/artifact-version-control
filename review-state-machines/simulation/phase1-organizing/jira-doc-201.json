@@ -1,0 +1,42 @@
+{
+  "key": "DOC-201",
+  "fields": {
+    "summary": "Developer Guide: Webhook Setup",
+    "description": "Write a developer guide covering webhook creation via API and UI, event type selection, payload format, signature verification, and retry behavior.\n\nReferences:\n- PRD: https://company.atlassian.net/wiki/spaces/PROD/pages/123456/Webhook+Management\n- TRD: https://company.atlassian.net/wiki/spaces/ENG/pages/789012/Webhook+Technical+Design\n- API spec: https://github.com/company/platform/blob/main/api/webhooks/openapi.yaml\n- Feature branch: feature/FEAT-101-webhooks",
+    "issuetype": { "name": "Task" },
+    "status": { "name": "To Do" },
+    "priority": { "name": "High" },
+    "assignee": { "displayName": "Alex Rivera", "emailAddress": "alex@company.com" },
+    "reporter": { "displayName": "Jordan Park", "emailAddress": "jordan@company.com" },
+    "labels": ["docs", "developer-guide", "release-4.3", "webhooks"],
+    "fixVersions": [{ "name": "4.3.0", "releaseDate": "2026-03-15" }],
+    "components": [{ "name": "Documentation" }],
+    "customfield_10200": "developer-guide",
+    "issuelinks": [
+      { "type": "is part of", "outwardIssue": { "key": "EPIC-100" } },
+      { "type": "depends on", "outwardIssue": { "key": "FEAT-101" } },
+      { "type": "related to", "outwardIssue": { "key": "DOC-202" } },
+      { "type": "related to", "outwardIssue": { "key": "DOC-203" } }
+    ],
+    "customfield_10300": {
+      "doc_type": "developer-guide",
+      "target_repo": "company/docs",
+      "target_path": "docs/guides/webhooks/setup.md",
+      "review_checklist": "engineering-developer-guide"
+    }
+  },
+  "changelog": {
+    "histories": [
+      {
+        "created": "2026-02-01T09:00:00Z",
+        "author": { "displayName": "Jordan Park" },
+        "items": [{ "field": "status", "fromString": null, "toString": "To Do" }]
+      },
+      {
+        "created": "2026-02-01T09:05:00Z",
+        "author": { "displayName": "Jordan Park" },
+        "items": [{ "field": "assignee", "fromString": null, "toString": "Alex Rivera" }]
+      }
+    ]
+  }
+}

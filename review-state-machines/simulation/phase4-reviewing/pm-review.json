@@ -1,0 +1,21 @@
+{
+  "_comment": "GitHub PR Review — PM Review: APPROVED",
+  "_checklist": "pm-review.md → basic-workflows, advanced-workflows, user-troubleshooting, outcome-guarantees, ui-reference-accuracy, workflow-pages-accuracy",
+  "_state_transition": "PM_decision → ALL_PASSED → GITHUB_pmApprove → PM_APPROVED",
+
+  "url": "https://api.github.com/repos/company/docs/pulls/42/reviews/1003",
+  "user": { "login": "marcus-webb", "role": "Product Manager" },
+  "state": "APPROVED",
+  "submitted_at": "2026-02-12T09:00:00Z",
+  "body": "Thorough doc. Covers the user journey well.\n\n**PM Checklist Results:**\n\n✅ **Basic Workflows** — Create webhook via API and UI both fully documented. Clear start-to-finish path.\n\n✅ **Advanced Workflows** — Event type filtering, signature verification with code samples in 3 languages, retry configuration. Good coverage for power users.\n\n✅ **User Troubleshooting** — Three troubleshooting scenarios with actionable steps. The body-parsing middleware section is the kind of thing that prevents support tickets. Love it.\n\n✅ **Outcome Guarantees** — Clear about what webhooks do and don't do. Payload truncation caveat at 256KB is important — glad it's documented.\n\n✅ **UI Reference Accuracy** — Settings → Integrations → Webhooks path matches current UI. Checked against staging.\n\n✅ **Workflow Pages Accuracy** — Consistent with DOC-202 (UI Reference) and DOC-203 (User Workflow) which are in draft. No contradictions.\n\n**One non-blocking note:** We should consider adding a 'Webhook vs. Polling' comparison table in a future update. Not required for this PR.\n\nApproved! 🚀",
+
+  "comments": [
+    {
+      "_checklist_item": "outcome-guarantees → Check Scope Accuracy",
+      "_verdict": "PASS (with note)",
+      "path": "docs/guides/webhooks/setup.md",
+      "line": 120,
+      "body": "✅ Good — you mentioned payload truncation at 256KB and the auto-disable at 95% failure rate. These are the kind of limitations users need to know about upfront. One thought for a follow-up: we should link to the upcoming 'Webhook Filtering' doc (DOC-204, v4.4) in a 'Coming Soon' note so users know transformation is on the roadmap."
+    }
+  ]
+}

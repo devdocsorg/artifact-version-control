@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experiment C: Review Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--bdr:#30363d;--txt:#e6edf3;--muted:#8b949e;--dim:#484f58;
+--grn:#3fb950;--grn-bg:rgba(63,185,80,.12);--grn-bdr:rgba(63,185,80,.4);
+--red:#f85149;--red-bg:rgba(248,81,73,.12);--red-bdr:rgba(248,81,73,.4);
+--blu:#58a6ff;--blu-bg:rgba(88,166,255,.15);
+--yel:#d29922;--yel-bg:rgba(210,153,34,.15);
+--pur:#bc8cff;--r:8px;--mono:'SF Mono','Fira Code','Cascadia Code',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--txt);line-height:1.6}
+
+/* Header */
+.hdr{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:14px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100}
+.hdr h1{font-size:17px;font-weight:600}
+.badge{padding:2px 10px;border-radius:12px;font-size:11px;font-family:var(--mono)}
+.badge-branch{background:var(--blu-bg);color:var(--blu)}
+.hdr-stats{font-size:13px;color:var(--muted);display:flex;gap:12px;margin-left:auto}
+.stat-add{color:var(--grn)}.stat-del{color:var(--red)}
+
+/* Progress bar */
+.progress-bar{background:var(--bg3);border-bottom:1px solid var(--bdr);padding:8px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:52px;z-index:99}
+.progress-track{flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:var(--grn);border-radius:3px;transition:width .3s ease}
+.progress-text{font-size:12px;color:var(--muted);min-width:100px;text-align:right}
+
+/* Layout: sidebar + main */
+.layout{display:flex;min-height:calc(100vh - 96px)}
+
+/* Review sidebar */
+.review-sidebar{width:300px;min-width:300px;background:var(--bg2);border-right:1px solid var(--bdr);overflow-y:auto;padding:0}
+.review-file{border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .15s}
+.review-file:hover{background:var(--bg3)}
+.review-file.active{background:var(--bg3);border-left:3px solid var(--blu)}
+.review-file-header{padding:12px 16px;display:flex;align-items:center;gap:10px}
+.review-file-name{font-family:var(--mono);font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.review-file-stat{font-size:11px;color:var(--dim)}
+.change-badge{font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.3px}
+.change-badge.added{background:var(--grn-bg);color:var(--grn)}.change-badge.removed{background:var(--red-bg);color:var(--red)}
+.change-badge.modified{background:var(--yel-bg);color:var(--yel)}.change-badge.unchanged{background:var(--bg3);color:var(--dim)}
+
+/* Review checklist */
+.review-checks{padding:4px 16px 12px;display:flex;flex-wrap:wrap;gap:6px}
+.review-check{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--dim);cursor:pointer;padding:3px 8px;border-radius:4px;border:1px solid var(--bdr);transition:all .15s;user-select:none}
+.review-check:hover{border-color:var(--muted);color:var(--muted)}
+.review-check.checked{background:var(--grn-bg);border-color:var(--grn-bdr);color:var(--grn)}
+.review-check input{display:none}
+.check-icon{font-size:12px}
+
+/* File completion indicator */
+.file-progress{width:20px;height:20px;border-radius:50%;border:2px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .2s}
+.file-progress.done{background:var(--grn);border-color:var(--grn);color:#fff}
+.file-progress.partial{border-color:var(--yel);color:var(--yel)}
+
+/* Main content area */
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+
+/* View selector within main */
+.view-tabs{display:flex;gap:0;border-bottom:1px solid var(--bdr);background:var(--bg2);flex-shrink:0}
+.view-tab{padding:10px 20px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;user-select:none;display:flex;align-items:center;gap:6px}
+.view-tab:hover{color:var(--txt);background:rgba(255,255,255,.03)}
+.view-tab.active{color:var(--blu);border-bottom-color:var(--blu)}
+
+/* Scrollable content */
+.view-content{flex:1;overflow-y:auto}
+
+/* Overview */
+.overview{padding:32px;max-width:800px}
+.overview h2{font-size:22px;margin-bottom:16px}
+.overview-desc{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:16px 20px;margin-bottom:24px;font-size:14px;line-height:1.7;color:var(--muted)}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;margin-bottom:24px}
+.summary-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:16px}
+.summary-card .num{font-size:28px;font-weight:700}
+.summary-card .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+
+/* Diff view */
+.diff-block{font-family:var(--mono);font-size:13px;line-height:1.7;overflow-x:auto}
+.diff-line{display:flex;min-height:24px}
+.diff-ln{width:55px;text-align:right;padding:0 10px;color:var(--dim);user-select:none;flex-shrink:0;font-size:12px;border-right:1px solid var(--bdr)}
+.diff-ln-old{border-right:none}
+.diff-marker{width:28px;text-align:center;flex-shrink:0;font-weight:700;user-select:none}
+.diff-text{padding:0 16px;white-space:pre;flex:1}
+.diff-add{background:var(--grn-bg)}.diff-add .diff-marker{color:var(--grn)}
+.diff-del{background:var(--red-bg)}.diff-del .diff-marker{color:var(--red)}
+.diff-hunk{background:var(--blu-bg);color:var(--blu);padding:6px 16px;font-size:12px;font-weight:600;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+.diff-collapsed{padding:10px 16px;font-size:12px;color:var(--dim);background:rgba(255,255,255,.02);cursor:pointer;text-align:center;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+.diff-collapsed:hover{background:var(--bg3)}
+
+/* Source view */
+.source-view{font-family:var(--mono);font-size:13px;line-height:1.7;overflow-x:auto}
+.source-line{display:flex;min-height:24px}
+.source-ln{width:55px;text-align:right;padding:0 10px;color:var(--dim);user-select:none;flex-shrink:0;font-size:12px;border-right:1px solid var(--bdr)}
+.source-text{padding:0 16px;white-space:pre;flex:1}
+.source-highlight{background:var(--grn-bg);border-left:3px solid var(--grn)}
+
+/* Preview */
+.preview-pane{padding:32px 48px;max-width:860px}
+.preview-pane h1{font-size:32px;margin:28px 0 14px;padding-bottom:10px;border-bottom:1px solid var(--bdr);font-weight:600}
+.preview-pane h2{font-size:24px;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--bdr)}
+.preview-pane h3{font-size:18px;margin:20px 0 8px}
+.preview-pane p{margin:10px 0;line-height:1.8}
+.preview-pane a{color:var(--blu);text-decoration:none}.preview-pane a:hover{text-decoration:underline}
+.preview-pane code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:13px}
+.preview-pane pre{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin:16px 0;overflow-x:auto}
+.preview-pane pre code{background:none;padding:0;font-size:13px;line-height:1.6}
+.preview-pane table{border-collapse:collapse;width:100%;margin:16px 0}
+.preview-pane th,.preview-pane td{border:1px solid var(--bdr);padding:10px 14px;text-align:left;font-size:13px}
+.preview-pane th{background:var(--bg3);font-weight:600}
+.preview-pane tr:nth-child(even){background:rgba(255,255,255,.02)}
+.preview-pane ul,.preview-pane ol{margin:10px 0;padding-left:28px}
+.preview-pane li{margin:5px 0;line-height:1.7}
+.preview-pane blockquote{border-left:3px solid var(--blu);padding:10px 20px;margin:16px 0;color:var(--muted)}
+.preview-pane hr{border:none;border-top:1px solid var(--bdr);margin:24px 0}
+.preview-pane strong{color:#fff}
+
+/* Split */
+.split-container{display:grid;grid-template-columns:1fr 1fr;height:100%}
+.split-pane{overflow:auto;border-right:1px solid var(--bdr)}
+.split-pane:last-child{border-right:none}
+.split-label{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:5}
+.split-label-old{background:var(--red-bg);color:var(--red)}
+.split-label-new{background:var(--grn-bg);color:var(--grn)}
+
+/* Notes panel */
+.notes-panel{border-top:1px solid var(--bdr);background:var(--bg2);padding:12px 16px;flex-shrink:0}
+.notes-input{width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:8px 12px;color:var(--txt);font-size:13px;font-family:inherit;resize:none;height:60px}
+.notes-input:focus{outline:none;border-color:var(--blu)}
+.notes-label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+
+/* Empty state */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px;color:var(--dim);font-size:15px;gap:12px}
+
+/* Exp label */
+.exp-label{position:fixed;top:12px;right:16px;background:var(--pur);color:#fff;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;z-index:200;letter-spacing:.5px}
+
+/* Loading */
+.load{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:20px}
+.load h2{font-size:26px;font-weight:600}.load p{color:var(--muted);font-size:14px}
+.drop{border:2px dashed var(--bdr);border-radius:16px;padding:60px;text-align:center;cursor:pointer;transition:all .2s}
+.drop:hover,.drop.active{border-color:var(--blu);background:rgba(88,166,255,.03)}
+</style>
+</head>
+<body>
+<div class="exp-label">EXPERIMENT C — REVIEW DASHBOARD</div>
+<div id="app">
+<div class="load" id="loader">
+<h2>📦 Artifact Diff Viewer</h2>
+<p>Experiment C: Guided review with checklist tracking</p>
+<div class="drop" id="dropzone" onclick="document.getElementById('fileInput').click()">
+<p style="font-size:48px;margin-bottom:16px">📄</p>
+<p style="font-size:15px">Drop diff_bundle.json here or click to browse</p>
+</div>
+<input type="file" id="fileInput" accept=".json" style="display:none"/>
+<p style="margin-top:20px;font-size:12px;color:var(--dim)">Or pass <code>?bundle=path/to/file.json</code></p>
+</div>
+<div id="viewer" style="display:none">
+<div class="hdr">
+<h1 id="prTitle"></h1>
+<span class="badge badge-branch" id="branchName"></span>
+<div class="hdr-stats" id="headerStats"></div>
+</div>
+<div class="progress-bar">
+<div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+<span class="progress-text" id="progressText">0% reviewed</span>
+</div>
+<div class="layout">
+<div class="review-sidebar" id="reviewSidebar"></div>
+<div class="main" id="mainPanel">
+<div class="view-tabs" id="viewTabs"></div>
+<div class="view-content" id="viewContent"></div>
+<div class="notes-panel">
+<div class="notes-label">📝 Review notes for this file</div>
+<textarea class="notes-input" id="notesInput" placeholder="Add notes, concerns, questions..." oninput="saveNote()"></textarea>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+let BUNDLE = null;
+let currentFileIdx = 0;
+let currentTab = 'diff';
+// Review state: per-file checks and notes
+let reviewState = {}; // { fileName: { checks: {content: bool, flow: bool, preview: bool}, notes: '' } }
+
+// --- Loading ---
+const params = new URLSearchParams(location.search);
+const bundlePath = params.get('bundle');
+if (bundlePath) fetch(bundlePath).then(r => r.json()).then(load).catch(console.error);
+document.getElementById('fileInput').onchange = e => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = ev => load(JSON.parse(ev.target.result)); r.readAsText(f); } };
+const dz = document.getElementById('dropzone');
+dz.ondragover = e => { e.preventDefault(); dz.classList.add('active'); };
+dz.ondragleave = () => dz.classList.remove('active');
+dz.ondrop = e => { e.preventDefault(); dz.classList.remove('active'); const f = e.dataTransfer.files[0]; if (f) { const r = new FileReader(); r.onload = ev => load(JSON.parse(ev.target.result)); r.readAsText(f); } };
+
+// --- File reconstruction ---
+function getFileChanges(fn) { return BUNDLE.changes.filter(c => c.file === fn); }
+function reconstructFile(fn, version = 'new') {
+  const changes = getFileChanges(fn), parts = [];
+  for (const ch of changes) {
+    if (ch.type === 'unchanged') parts.push(ch.content?.content || '');
+    else if (ch.type === 'added') { if (version === 'new') parts.push(ch.content?.content || ''); }
+    else if (ch.type === 'removed') { if (version === 'old') parts.push(ch.removed_content?.content || ''); }
+    else if (ch.type === 'modified') parts.push(version === 'new' ? (ch.after?.content || '') : (ch.before?.content || ''));
+  }
+  return parts.join('\n');
+}
+function getHighlightRanges(fn) {
+  const changes = getFileChanges(fn), ranges = [];
+  let ln = 1;
+  for (const ch of changes) {
+    let content = '', hl = false;
+    if (ch.type === 'unchanged') content = ch.content?.content || '';
+    else if (ch.type === 'added') { content = ch.content?.content || ''; hl = true; }
+    else if (ch.type === 'removed') continue;
+    else if (ch.type === 'modified') { content = ch.after?.content || ''; hl = true; }
+    const lines = content.split('\n');
+    if (hl) ranges.push({ s: ln, e: ln + lines.length - 1 });
+    ln += lines.length;
+  }
+  return ranges;
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// --- Diff building ---
+function buildDiffLines(fn) {
+  const changes = getFileChanges(fn), lines = [];
+  let oln = 1, nln = 1;
+  for (const ch of changes) {
+    if (ch.type === 'unchanged') {
+      const tl = (ch.content?.content || '').split('\n');
+      if (ch.collapsed && tl.length > 8) {
+        for (let i = 0; i < 3; i++) lines.push({ type: 'ctx', old: oln + i, new: nln + i, text: tl[i] });
+        lines.push({ type: 'fold', count: tl.length - 6 });
+        for (let i = tl.length - 3; i < tl.length; i++) lines.push({ type: 'ctx', old: oln + i, new: nln + i, text: tl[i] });
+      } else { tl.forEach((t, i) => lines.push({ type: 'ctx', old: oln + i, new: nln + i, text: t })); }
+      oln += tl.length; nln += tl.length;
+    } else if (ch.type === 'added') {
+      lines.push({ type: 'hunk', text: `${ch.description || 'Added'} — ${ch.location || ''}` });
+      (ch.content?.content || '').split('\n').forEach(t => lines.push({ type: 'add', new: nln++, text: t }));
+    } else if (ch.type === 'removed') {
+      lines.push({ type: 'hunk', text: `${ch.description || 'Removed'} — ${ch.location || ''}` });
+      (ch.removed_content?.content || '').split('\n').forEach(t => lines.push({ type: 'del', old: oln++, text: t }));
+    } else if (ch.type === 'modified') {
+      lines.push({ type: 'hunk', text: `${ch.description || 'Modified'} — ${ch.location || ''}` });
+      (ch.before?.content || '').split('\n').forEach(t => lines.push({ type: 'del', old: oln++, text: t }));
+      (ch.after?.content || '').split('\n').forEach(t => lines.push({ type: 'add', new: nln++, text: t }));
+    }
+  }
+  return lines;
+}
+
+// --- Render functions ---
+function renderDiff(fn) {
+  const lines = buildDiffLines(fn);
+  let html = '<div class="diff-block">';
+  for (const l of lines) {
+    if (l.type === 'hunk') html += `<div class="diff-hunk">@@ ${escHtml(l.text)} @@</div>`;
+    else if (l.type === 'fold') html += `<div class="diff-collapsed" onclick="this.style.display='none'">⋯ ${l.count} unchanged lines</div>`;
+    else {
+      const cls = l.type === 'add' ? 'diff-add' : l.type === 'del' ? 'diff-del' : '';
+      const m = l.type === 'add' ? '+' : l.type === 'del' ? '−' : ' ';
+      html += `<div class="diff-line ${cls}"><span class="diff-ln diff-ln-old">${l.old||''}</span><span class="diff-ln">${l.new||''}</span><span class="diff-marker">${m}</span><span class="diff-text">${escHtml(l.text)}</span></div>`;
+    }
+  }
+  return html + '</div>';
+}
+
+function renderSource(fn, ver = 'new') {
+  const src = reconstructFile(fn, ver), hl = ver === 'new' ? getHighlightRanges(fn) : [];
+  const lines = src.split('\n');
+  let html = '<div class="source-view">';
+  lines.forEach((t, i) => {
+    const ln = i + 1, h = hl.some(r => ln >= r.s && ln <= r.e) ? ' source-highlight' : '';
+    html += `<div class="source-line${h}"><span class="source-ln">${ln}</span><span class="source-text">${escHtml(t)}</span></div>`;
+  });
+  return html + '</div>';
+}
+
+function renderPreview(fn, ver = 'new') {
+  const src = reconstructFile(fn, ver);
+  if (!src.trim()) return '<div class="empty-state">File does not exist in this version</div>';
+  return `<div class="preview-pane">${marked.parse(src)}</div>`;
+}
+
+function renderSplitPreview(fn) {
+  return `<div class="split-container">
+    <div class="split-pane"><div class="split-label split-label-old">⬅ Before (rendered)</div>${renderPreview(fn, 'old')}</div>
+    <div class="split-pane"><div class="split-label split-label-new">After (rendered) ➡</div>${renderPreview(fn, 'new')}</div>
+  </div>`;
+}
+
+// --- Review state management ---
+function initReviewState() {
+  BUNDLE.summary.files.forEach(f => {
+    if (f.status === 'unchanged') return;
+    const checks = f.status === 'removed' 
+      ? { content: false, impact: false }
+      : { content: false, flow: false, preview: false };
+    reviewState[f.path] = { checks, notes: '' };
+  });
+}
+
+function toggleCheck(fileName, checkName) {
+  if (!reviewState[fileName]) return;
+  reviewState[fileName].checks[checkName] = !reviewState[fileName].checks[checkName];
+  renderSidebar();
+  updateProgress();
+}
+
+function saveNote() {
+  const fn = BUNDLE.summary.files[currentFileIdx]?.path;
+  if (fn && reviewState[fn]) {
+    reviewState[fn].notes = document.getElementById('notesInput').value;
+  }
+}
+
+function updateProgress() {
+  let total = 0, done = 0;
+  Object.values(reviewState).forEach(rs => {
+    Object.values(rs.checks).forEach(v => { total++; if (v) done++; });
+  });
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${pct}% reviewed (${done}/${total} checks)`;
+}
+
+function getFileCheckState(fileName) {
+  const rs = reviewState[fileName];
+  if (!rs) return 'none';
+  const checks = Object.values(rs.checks);
+  const done = checks.filter(v => v).length;
+  if (done === checks.length) return 'done';
+  if (done > 0) return 'partial';
+  return 'none';
+}
+
+// --- Sidebar ---
+function renderSidebar() {
+  const sb = document.getElementById('reviewSidebar');
+  sb.innerHTML = '';
+  
+  BUNDLE.summary.files.forEach((f, idx) => {
+    if (f.status === 'unchanged') return;
+    
+    const fileEl = document.createElement('div');
+    fileEl.className = `review-file${idx === currentFileIdx ? ' active' : ''}`;
+    fileEl.onclick = () => { currentFileIdx = idx; renderAll(); };
+    
+    const state = getFileCheckState(f.path);
+    const progressIcon = state === 'done' ? '✓' : state === 'partial' ? '◐' : '';
+    
+    fileEl.innerHTML = `
+      <div class="review-file-header">
+        <div class="file-progress ${state}">${progressIcon}</div>
+        <span class="change-badge ${f.status}">${f.status}</span>
+        <span class="review-file-name">${f.path}</span>
+        <span class="review-file-stat">${f.description || ''}</span>
+      </div>
+      <div class="review-checks" onclick="event.stopPropagation()">
+        ${renderFileChecks(f.path)}
+      </div>
+    `;
+    sb.appendChild(fileEl);
+  });
+}
+
+function renderFileChecks(fileName) {
+  const rs = reviewState[fileName];
+  if (!rs) return '';
+  
+  const labels = {
+    content: '📝 Content',
+    flow: '📖 Flow',
+    preview: '👁 Preview',
+    impact: '⚠️ Impact'
+  };
+  
+  return Object.entries(rs.checks).map(([key, val]) => `
+    <label class="review-check ${val ? 'checked' : ''}" onclick="toggleCheck('${fileName}', '${key}')">
+      <span class="check-icon">${val ? '✓' : '○'}</span>
+      ${labels[key] || key}
+    </label>
+  `).join('');
+}
+
+// --- View tabs ---
+function renderViewTabs() {
+  const tabs = document.getElementById('viewTabs');
+  const f = BUNDLE.summary.files[currentFileIdx];
+  const isDeleted = f.status === 'removed';
+  const isAdded = f.status === 'added';
+  
+  const tabDefs = [
+    { id: 'diff', label: '📝 Changes', always: true },
+    { id: 'source', label: '📄 New Source', hidden: isDeleted },
+    { id: 'preview', label: '👁 Preview', hidden: isDeleted },
+    { id: 'split-preview', label: '⟺ Compare Preview', hidden: isDeleted || isAdded },
+    { id: 'old-source', label: '📄 Old Source', hidden: isAdded },
+  ];
+  
+  tabs.innerHTML = '';
+  tabDefs.forEach(t => {
+    if (t.hidden) return;
+    const el = document.createElement('div');
+    el.className = `view-tab${t.id === currentTab ? ' active' : ''}`;
+    el.textContent = t.label;
+    el.onclick = () => { currentTab = t.id; renderViewTabs(); renderContent(); };
+    tabs.appendChild(el);
+  });
+  
+  // If current tab is hidden, fallback to diff
+  if (tabDefs.find(t => t.id === currentTab)?.hidden) {
+    currentTab = 'diff';
+    renderViewTabs();
+  }
+}
+
+function renderContent() {
+  const content = document.getElementById('viewContent');
+  const fn = BUNDLE.summary.files[currentFileIdx].path;
+  
+  switch (currentTab) {
+    case 'diff': content.innerHTML = renderDiff(fn); break;
+    case 'source': content.innerHTML = renderSource(fn, 'new'); break;
+    case 'preview': content.innerHTML = renderPreview(fn, 'new'); break;
+    case 'split-preview': content.innerHTML = renderSplitPreview(fn); break;
+    case 'old-source': content.innerHTML = renderSource(fn, 'old'); break;
+  }
+  content.scrollTop = 0;
+  
+  // Update notes
+  const notes = document.getElementById('notesInput');
+  const rs = reviewState[fn];
+  notes.value = rs ? rs.notes : '';
+}
+
+function renderAll() {
+  renderSidebar();
+  renderViewTabs();
+  renderContent();
+}
+
+// --- Load ---
+function load(data) {
+  BUNDLE = data;
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('viewer').style.display = 'block';
+  
+  const m = BUNDLE.metadata, s = BUNDLE.summary.stats;
+  document.getElementById('prTitle').textContent = m.pr_title || `Branch: ${m.branch_name}`;
+  document.getElementById('branchName').textContent = m.branch_name;
+  document.getElementById('headerStats').innerHTML = `
+    <span class="stat-add">+${s.total_additions}</span>
+    <span class="stat-del">−${s.total_removals}</span>
+    <span style="color:var(--dim)">${m.artifact_type}</span>`;
+  
+  // Find first non-unchanged file
+  currentFileIdx = BUNDLE.summary.files.findIndex(f => f.status !== 'unchanged');
+  if (currentFileIdx < 0) currentFileIdx = 0;
+  
+  initReviewState();
+  updateProgress();
+  renderAll();
+}
+</script>
+</body>
+</html>
